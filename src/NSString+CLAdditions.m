@@ -10,21 +10,21 @@
 
 @implementation NSString (CLAdditions)
 
-- (NSString *)ayTrimmedString {
+- (NSString *)clTrimmedString {
 	return [self stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
 }
 
-- (NSString *)ayUrlEncodedParameterString {
+- (NSString *)clUrlEncodedParameterString {
 	NSString *encodedString = (NSString *)CFURLCreateStringByAddingPercentEscapes(NULL, (CFStringRef)self, NULL, CFSTR("!*'\"();:@&=+$,/?%#[]"), kCFStringEncodingUTF8);
 	return [encodedString autorelease];
 }
 
-- (NSString *)ayEscapeXMLString {
+- (NSString *)clEscapeXMLString {
 	NSString *escapedString = (NSString *)CFXMLCreateStringByEscapingEntities(NULL, (CFStringRef)self, NULL);
 	return [escapedString autorelease];
 }
 
-- (NSString *)ayUnescapeXMLString {
+- (NSString *)clUnescapeXMLString {
 	NSString *unescapedString = (NSString *)CFXMLCreateStringByUnescapingEntities(NULL, (CFStringRef)self, NULL);
 	return [unescapedString autorelease];
 }

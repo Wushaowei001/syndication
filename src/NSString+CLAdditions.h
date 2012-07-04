@@ -8,9 +8,9 @@
 
 @interface NSString (CLAdditions)
 
-- (NSString *)ayTrimmedString;
-- (NSString *)ayUrlEncodedParameterString;
-- (NSString *)ayEscapeXMLString;
-- (NSString *)ayUnescapeXMLString;
+- (NSString *)clTrimmedString;
+- (NSString *)clUrlEncodedParameterString;
+- (NSString *)clEscapeXMLString;
+- (NSString *)clUnescapeXMLString;
 
 @end

@@ -8,11 +8,11 @@
 
 @interface NSScrollView (CLAdditions)
 
-- (void)ayScrollToTop;
-- (void)ayScrollToBottom;
-- (void)ayPageUp;
-- (void)ayPageDown;
-- (void)ayScrollTo:(NSPoint)scrollPoint;
-- (void)ayScrollInstantlyTo:(NSPoint)scrollPoint;
+- (void)clScrollToTop;
+- (void)clScrollToBottom;
+- (void)clPageUp;
+- (void)clPageDown;
+- (void)clScrollTo:(NSPoint)scrollPoint;
+- (void)clScrollInstantlyTo:(NSPoint)scrollPoint;
 
 @end

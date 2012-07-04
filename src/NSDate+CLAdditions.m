@@ -10,7 +10,7 @@
 
 @implementation NSDate (CLAdditions)
 
-- (NSString *)ayStringForDisplay {
+- (NSString *)clStringForDisplay {
 	NSString *display;
 	NSDate *now = [NSDate date];
 	

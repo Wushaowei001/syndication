@@ -8,8 +8,8 @@
 
 @interface NSFileManager (CLAdditions)
 
-- (NSString *)ayApplicationSupportDirectory;
-- (NSString *)aySyndicationSupportDirectory;
-- (void)ayCopyLiteDirectoryIfItExistsAndRegularDirectoryDoesnt;
+- (NSString *)clApplicationSupportDirectory;
+- (NSString *)clSyndicationSupportDirectory;
+- (void)clCopyLiteDirectoryIfItExistsAndRegularDirectoryDoesnt;
 
 @end

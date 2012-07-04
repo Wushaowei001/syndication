@@ -11,7 +11,7 @@
 
 @implementation NSFileManager (CLAdditions)
 
-- (NSString *)ayApplicationSupportDirectory {
+- (NSString *)clApplicationSupportDirectory {
 	NSArray *paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES);
 	
 	if ([paths count] == 0)	{
@@ -24,8 +24,8 @@
 	return resolvedPath;
 }
 
-- (NSString *)aySyndicationSupportDirectory {
-	NSString *supportDirectory = [self ayApplicationSupportDirectory];
+- (NSString *)clSyndicationSupportDirectory {
+	NSString *supportDirectory = [self clApplicationSupportDirectory];
 	NSString *executableName = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleExecutable"];
 	NSString *syndicationSupportDirectory = [supportDirectory stringByAppendingPathComponent:executableName];
 	
@@ -48,8 +48,8 @@
 	return syndicationSupportDirectory;
 }
 
-- (void)ayCopyLiteDirectoryIfItExistsAndRegularDirectoryDoesnt {
-    NSString *supportDirectory = [self ayApplicationSupportDirectory];
+- (void)clCopyLiteDirectoryIfItExistsAndRegularDirectoryDoesnt {
+    NSString *supportDirectory = [self clApplicationSupportDirectory];
 	NSString *executableName = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleExecutable"];
 	
 	// if this accidently gets called from the Lite version itself, don't do anything

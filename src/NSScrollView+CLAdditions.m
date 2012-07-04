@@ -12,18 +12,18 @@
 
 @implementation NSScrollView (CLAdditions)
 
-- (void)ayScrollToTop {
-	[self ayScrollInstantlyTo:NSMakePoint(0.0, 0.0)];
+- (void)clScrollToTop {
+	[self clScrollInstantlyTo:NSMakePoint(0.0, 0.0)];
 }
 
-- (void)ayScrollToBottom {
+- (void)clScrollToBottom {
 	CGFloat documentHeight = [[self contentView] documentRect].size.height;
 	CGFloat clipViewHeight = [[self contentView] frame].size.height;
 	
-	[self ayScrollInstantlyTo:NSMakePoint(0.0, documentHeight - clipViewHeight)];
+	[self clScrollInstantlyTo:NSMakePoint(0.0, documentHeight - clipViewHeight)];
 }
 
-- (void)ayPageUp {
+- (void)clPageUp {
 	NSRect documentVisibleRect = [[self contentView] documentVisibleRect];
 	CGFloat originalScrollX = documentVisibleRect.origin.x;
 	CGFloat originalScrollY = documentVisibleRect.origin.y;
@@ -34,10 +34,10 @@
 		pageSize -= 35;
 	}
 	
-	[self ayScrollTo:NSMakePoint(originalScrollX, originalScrollY - pageSize)];
+	[self clScrollTo:NSMakePoint(originalScrollX, originalScrollY - pageSize)];
 }
 
-- (void)ayPageDown {
+- (void)clPageDown {
 	NSRect documentVisibleRect = [[self contentView] documentVisibleRect];
 	CGFloat originalScrollX = documentVisibleRect.origin.x;
 	CGFloat originalScrollY = documentVisibleRect.origin.y;
@@ -48,17 +48,17 @@
 		pageSize -= 35;
 	}
 	
-	[self ayScrollTo:NSMakePoint(originalScrollX, originalScrollY + pageSize)];
+	[self clScrollTo:NSMakePoint(originalScrollX, originalScrollY + pageSize)];
 }
 
-- (void)ayScrollTo:(NSPoint)scrollPoint {
+- (void)clScrollTo:(NSPoint)scrollPoint {
 	NSClipView *clipView = [self contentView];
 	scrollPoint = [clipView constrainScrollPoint:scrollPoint];
 	[clipView scrollToPoint:scrollPoint];
 	[self reflectScrolledClipView:clipView];
 }
 
-- (void)ayScrollInstantlyTo:(NSPoint)scrollPoint {
+- (void)clScrollInstantlyTo:(NSPoint)scrollPoint {
 	NSClipView *clipView = [self contentView];
 	scrollPoint = [clipView constrainScrollPoint:scrollPoint];
 	[clipView setBoundsOrigin:scrollPoint];

@@ -64,7 +64,7 @@
 					NSMutableDictionary *readerFolderDictionary = [NSMutableDictionary dictionary];
 					
 					for (NSDictionary *subscription in subscriptions) {
-						NSString *feedurl = [[subscription objectForKey:@"id"] ayTrimmedString];
+						NSString *feedurl = [[subscription objectForKey:@"id"] clTrimmedString];
 						[readerFeedList addObject:feedurl];
 						[readerTitleDictionary setValue:[subscription objectForKey:@"title"] forKey:feedurl];
 						
@@ -99,7 +99,7 @@
 							
 							if (unreadSubscriptions != nil) {
 								for (NSDictionary *unreadSubscription in unreadSubscriptions) {
-									NSString *feedUrl = [[unreadSubscription objectForKey:@"id"] ayTrimmedString];
+									NSString *feedUrl = [[unreadSubscription objectForKey:@"id"] clTrimmedString];
 									
 									if (feedUrl != nil) {
 										NSString *feedUnreadCount = [unreadSubscription objectForKey:@"count"];

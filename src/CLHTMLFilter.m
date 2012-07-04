@@ -41,7 +41,7 @@ static NSArray *attributeWhiteList;
 	[xmlDocument release];
 	
 	if (plainTextString != nil) {
-		plainTextString = [plainTextString ayTrimmedString];
+		plainTextString = [plainTextString clTrimmedString];
 	}
 	
 	return plainTextString;
@@ -69,7 +69,7 @@ static NSArray *attributeWhiteList;
 		return urlString;
 	}
 	
-	urlString = [urlString ayTrimmedString];
+	urlString = [urlString clTrimmedString];
 	
 	NSPasteboard *pasteboard = [NSPasteboard pasteboardWithName:@"SyndicationPB"];
 	[pasteboard declareTypes:[NSArray arrayWithObject:NSStringPboardType] owner:nil];

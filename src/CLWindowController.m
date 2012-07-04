@@ -213,17 +213,17 @@
 			if (character == CLSpaceCharacter) {
 				
 				if (shiftIsPressed) {
-					[scrollView ayPageUp];
+					[scrollView clPageUp];
 				} else {
-					[scrollView ayPageDown];
+					[scrollView clPageDown];
 				}
 				
 				scrollDidChange = YES;
 			} else if (character == NSHomeFunctionKey) {
-				[scrollView ayScrollToTop];
+				[scrollView clScrollToTop];
 				scrollDidChange = YES;
 			} else if (character == NSEndFunctionKey) {
-				[scrollView ayScrollToBottom];
+				[scrollView clScrollToBottom];
 				scrollDidChange = YES;
 			} else if (character == NSUpArrowFunctionKey) {
 				[self selectPreviousItemForTimelineView:timelineView];
@@ -862,7 +862,7 @@
 	NSString *query = [searchField stringValue];
 	
 	if (query != nil && [query length] > 0) {
-		query = [query ayTrimmedString];
+		query = [query clTrimmedString];
 		
 		[self openItemInCurrentTab:nil orQuery:query];
 		[sourceList deselectAll:self];
@@ -870,7 +870,7 @@
 }
 
 - (void)addSubscriptionForUrlString:(NSString *)url addToGoogle:(BOOL)addToGoogle {
-	url = [url ayTrimmedString];
+	url = [url clTrimmedString];
 	
 	// add http:// to the beginning if necessary
 	NSURL *urlTest = [NSURL URLWithString:url];
@@ -963,7 +963,7 @@
 			scrollYPosition = scrollYPosition - buffer;
 		}
 		
-		[[timelineView scrollViewReference] ayScrollInstantlyTo:NSMakePoint(0.0, scrollYPosition)];
+		[[timelineView scrollViewReference] clScrollInstantlyTo:NSMakePoint(0.0, scrollYPosition)];
 	}
 }
 
@@ -982,7 +982,7 @@
 		NSPoint scrollPoint = NSMakePoint(0.0, scrollYPosition);
 		
 		NSScrollView *scrollView = [[[[[classicView webView] mainFrame] frameView] documentView] enclosingScrollView];
-		[scrollView ayScrollInstantlyTo:scrollPoint];
+		[scrollView clScrollInstantlyTo:scrollPoint];
 	}
 }
 
@@ -1738,7 +1738,7 @@
 		
 		NSClipView *clipView = (NSClipView *)[[[tabViewItem classicView] tableView] superview];
 		NSScrollView *scrollView = (NSScrollView *)[clipView superview];
-		[scrollView ayScrollToTop];
+		[scrollView clScrollToTop];
 		
 		[[[[tabViewItem classicView] webView] mainFrame] loadHTMLString:@"" baseURL:nil];
 		
@@ -2077,7 +2077,7 @@
 	[timelineView setShouldIgnoreScrollEvent:YES];
 	
 	NSScrollView *scrollView = [timelineView scrollViewReference];
-	[scrollView ayScrollInstantlyTo:NSMakePoint(0, [[item view] frame].origin.y - TIMELINE_FIRST_ITEM_MARGIN_TOP)];
+	[scrollView clScrollInstantlyTo:NSMakePoint(0, [[item view] frame].origin.y - TIMELINE_FIRST_ITEM_MARGIN_TOP)];
 }
 
 - (void)selectNextItemForTimelineView:(CLTimelineView *)timelineView {

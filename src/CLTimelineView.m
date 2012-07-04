@@ -141,7 +141,7 @@
 	if (oldScrollY != scrollY) {
 		[self setShouldIgnoreScrollEvent:YES];
 		
-		[scrollViewReference ayScrollInstantlyTo:NSMakePoint(scrollX, scrollY)];
+		[scrollViewReference clScrollInstantlyTo:NSMakePoint(scrollX, scrollY)];
 	}
 }
 
@@ -154,7 +154,7 @@
 	[self setPostsMissingFromTopCount:0];
 	[self setPostsMissingFromBottom:YES];
 	
-	[scrollViewReference ayScrollToTop];
+	[scrollViewReference clScrollToTop];
 }
 
 - (void)removePostsInRange:(NSRange)range preserveScrollPosition:(BOOL)preserveScroll updateMetadata:(BOOL)updateMetadata {
@@ -209,7 +209,7 @@
 	if (preserveScroll && oldScrollY != scrollY) {
 		[self setShouldIgnoreScrollEvent:YES];
 		
-		[scrollViewReference ayScrollInstantlyTo:NSMakePoint(scrollX, scrollY)];
+		[scrollViewReference clScrollInstantlyTo:NSMakePoint(scrollX, scrollY)];
 	}
 	
 	if (updateMetadata) {

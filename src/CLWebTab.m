@@ -70,7 +70,7 @@
 }
 
 - (IBAction)textField:(id)sender {
-	NSString *stringToLoad = [[sender stringValue] ayTrimmedString];
+	NSString *stringToLoad = [[sender stringValue] clTrimmedString];
 	
 	if ([[stringToLoad substringToIndex:7] isEqual:@"feed://"]) {
 		stringToLoad = [NSString stringWithFormat:@"http://%@", [stringToLoad substringFromIndex:7]];

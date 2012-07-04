@@ -56,7 +56,7 @@
 		}
 	}
 	
-	return [combinedTextValue ayTrimmedString];
+	return [combinedTextValue clTrimmedString];
 }
 
 @end

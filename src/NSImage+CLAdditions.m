@@ -10,7 +10,7 @@
 
 @implementation NSImage (CLAdditions)
 
-- (NSImage *)ayTintedImageWithColor:(NSColor *)tint {
+- (NSImage *)clTintedImageWithColor:(NSColor *)tint {
 	NSSize size = [self size];
 	NSRect imageBounds = NSMakeRect(0, 0, size.width, size.height);    
 	
@@ -26,7 +26,7 @@
 	return [copiedImage autorelease];
 }
 
-- (NSImage *)ayThumbnail:(NSSize)size {
+- (NSImage *)clThumbnail:(NSSize)size {
 	BOOL originalScalesValue = [self scalesWhenResized];
 	NSSize originalSize = [self size];
 	[self setScalesWhenResized:YES];

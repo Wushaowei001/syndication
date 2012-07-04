@@ -18,7 +18,7 @@ static NSString *path;
 	if (path == nil) {
 		
 		NSFileManager *fileManager = [NSFileManager defaultManager];
-		NSString *folder = [fileManager aySyndicationSupportDirectory];
+		NSString *folder = [fileManager clSyndicationSupportDirectory];
 		NSString *fileName = @"SyndicationDatabase";
 		
 		path = [[folder stringByAppendingPathComponent:fileName] retain];

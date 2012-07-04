@@ -225,7 +225,7 @@
 	}
 	
 	if (preserveScroll && oldScrollY != scrollY) {
-		[scrollView ayScrollInstantlyTo:NSMakePoint(scrollX, scrollY)];
+		[scrollView clScrollInstantlyTo:NSMakePoint(scrollX, scrollY)];
 	}
 	
 	if (updateMetadata) {

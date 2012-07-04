@@ -8,7 +8,7 @@
 
 @interface NSImage (CLAdditions)
 
-- (NSImage *)ayTintedImageWithColor:(NSColor *)tint;
-- (NSImage *)ayThumbnail:(NSSize)size;
+- (NSImage *)clTintedImageWithColor:(NSColor *)tint;
+- (NSImage *)clThumbnail:(NSSize)size;
 
 @end

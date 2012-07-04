@@ -135,7 +135,7 @@
 		3E37D80015A10D1600F1B831 /* CLActivityView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CLActivityView.h; sourceTree = "<group>"; };
 		3E37D80115A10D1600F1B831 /* CLActivityView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CLActivityView.m; sourceTree = "<group>"; };
 		3E37D80215A10D1600F1B831 /* CLClassicView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CLClassicView.h; sourceTree = "<group>"; };
-		3E37D80315A10D1600F1B831 /* CLClassicView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CLClassicView.m; sourceTree = "<group>"; };
+		3E37D80315A10D1600F1B831 /* CLClassicView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = CLClassicView.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
 		3E37D80515A10D1600F1B831 /* CLConstants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CLConstants.h; sourceTree = "<group>"; };
 		3E37D80915A10D6C00F1B831 /* CLFeedRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CLFeedRequest.h; sourceTree = "<group>"; };
 		3E37D80A15A10D6C00F1B831 /* CLFeedRequest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CLFeedRequest.m; sourceTree = "<group>"; };
@@ -207,7 +207,7 @@
 		3E37D86615A10E8600F1B831 /* CLGoogleMarkReadOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CLGoogleMarkReadOperation.h; sourceTree = "<group>"; };
 		3E37D86715A10E8600F1B831 /* CLGoogleMarkReadOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CLGoogleMarkReadOperation.m; sourceTree = "<group>"; };
 		3E37D86815A10E8600F1B831 /* CLGoogleOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CLGoogleOperation.h; sourceTree = "<group>"; };
-		3E37D86915A10E8600F1B831 /* CLGoogleOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CLGoogleOperation.m; sourceTree = "<group>"; };
+		3E37D86915A10E8600F1B831 /* CLGoogleOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = CLGoogleOperation.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
 		3E37D86A15A10E8600F1B831 /* CLGoogleOperationDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CLGoogleOperationDelegate.h; sourceTree = "<group>"; };
 		3E37D86B15A10E8600F1B831 /* CLGoogleRemoveFromFolderOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CLGoogleRemoveFromFolderOperation.h; sourceTree = "<group>"; };
 		3E37D86C15A10E8600F1B831 /* CLGoogleRemoveFromFolderOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CLGoogleRemoveFromFolderOperation.m; sourceTree = "<group>"; };
@@ -220,7 +220,7 @@
 		3E37D87315A10E8600F1B831 /* CLGoogleSyncOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CLGoogleSyncOperation.m; sourceTree = "<group>"; };
 		3E37D87415A10E8600F1B831 /* CLGoogleSyncOperationDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CLGoogleSyncOperationDelegate.h; sourceTree = "<group>"; };
 		3E37D88115A10EB700F1B831 /* CLDatabaseHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CLDatabaseHelper.h; sourceTree = "<group>"; };
-		3E37D88215A10EB700F1B831 /* CLDatabaseHelper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CLDatabaseHelper.m; sourceTree = "<group>"; };
+		3E37D88215A10EB700F1B831 /* CLDatabaseHelper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = CLDatabaseHelper.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
 		3E37D88315A10EB700F1B831 /* CLDateHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CLDateHelper.h; sourceTree = "<group>"; };
 		3E37D88415A10EB700F1B831 /* CLDateHelper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CLDateHelper.m; sourceTree = "<group>"; };
 		3E37D88515A10EB700F1B831 /* CLErrorHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CLErrorHelper.h; sourceTree = "<group>"; };

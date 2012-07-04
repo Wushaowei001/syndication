@@ -346,7 +346,7 @@ static NSArray *preferencesToolbarItems;
 
 - (void)applicationWillFinishLaunching:(NSNotification *)aNotification {
 	
-    [[NSFileManager defaultManager] ayCopyLiteDirectoryIfItExistsAndRegularDirectoryDoesnt];
+    [[NSFileManager defaultManager] clCopyLiteDirectoryIfItExistsAndRegularDirectoryDoesnt];
     
 	NSInteger thirtyMinutes = TIME_INTERVAL_MINUTE * 30;
 	NSInteger oneYear = TIME_INTERVAL_YEAR;
@@ -1801,7 +1801,7 @@ static NSArray *preferencesToolbarItems;
                         }
                         
 						if (scrollY != oldScrollY) {
-							[scrollView ayScrollInstantlyTo:NSMakePoint(scrollX, scrollY)];
+							[scrollView clScrollInstantlyTo:NSMakePoint(scrollX, scrollY)];
 						}
 						
 						[[classicView tableView] reloadData];
@@ -1812,7 +1812,7 @@ static NSArray *preferencesToolbarItems;
 						}
 						
 						if (scrollY != oldScrollY) {
-							[scrollView ayScrollInstantlyTo:NSMakePoint(scrollX, scrollY)];
+							[scrollView clScrollInstantlyTo:NSMakePoint(scrollX, scrollY)];
 						}
 					}
 					
@@ -2663,7 +2663,7 @@ static NSArray *preferencesToolbarItems;
 			title = @"";
 		}
 		
-		title = [title ayEscapeXMLString];
+		title = [title clEscapeXMLString];
 		
 		for (NSUInteger i=0; i<indentLevel; i++) {
 			[returnString appendString:@"\t"];
@@ -2709,9 +2709,9 @@ static NSArray *preferencesToolbarItems;
 			htmlUrl = @"";
 		}
 		
-		title = [title ayEscapeXMLString];
-		xmlUrl = [xmlUrl ayEscapeXMLString];
-		htmlUrl = [htmlUrl ayEscapeXMLString];
+		title = [title clEscapeXMLString];
+		xmlUrl = [xmlUrl clEscapeXMLString];
+		htmlUrl = [htmlUrl clEscapeXMLString];
 		
 		if ([xmlUrl isEqual:@""] == NO) {
 			for (NSUInteger i=0; i<indentLevel; i++) {
@@ -2762,11 +2762,11 @@ static NSArray *preferencesToolbarItems;
 		NSDictionary *nodeAttributes = [node attributes];
 		
 		if ([nodeName isEqual:@"outline"]) {
-			NSString *nodeType = [[nodeAttributes valueForKey:@"type"] ayUnescapeXMLString];
-			NSString *nodeTitle = [[nodeAttributes valueForKey:@"text"] ayUnescapeXMLString];
+			NSString *nodeType = [[nodeAttributes valueForKey:@"type"] clUnescapeXMLString];
+			NSString *nodeTitle = [[nodeAttributes valueForKey:@"text"] clUnescapeXMLString];
 			
 			if (nodeTitle == nil) {
-				nodeTitle = [[nodeAttributes valueForKey:@"title"] ayUnescapeXMLString];
+				nodeTitle = [[nodeAttributes valueForKey:@"title"] clUnescapeXMLString];
 			}
 			
 			if (nodeType == nil || [nodeType isEqual:@"rss"] == NO) {
@@ -2800,7 +2800,7 @@ static NSArray *preferencesToolbarItems;
 				
 			} else {
 				
-				NSString *nodeXmlUrl = [[nodeAttributes valueForKey:@"xmlUrl"] ayUnescapeXMLString];
+				NSString *nodeXmlUrl = [[nodeAttributes valueForKey:@"xmlUrl"] clUnescapeXMLString];
 				
 				if (nodeXmlUrl != nil) {
 					BOOL feedAlreadyInDB = NO;
@@ -4429,7 +4429,7 @@ static NSArray *preferencesToolbarItems;
 	}
 	
 	if (linkString != nil) {
-		linkString = [linkString ayUrlEncodedParameterString];
+		linkString = [linkString clUrlEncodedParameterString];
 	}
 	
 	return linkString;
@@ -4532,7 +4532,7 @@ static NSArray *preferencesToolbarItems;
 
 - (IBAction)emailSupport:(id)sender {
 	NSString *email = @"support@calv.in";
-	NSString *subject = [@"Syndication support request" ayUrlEncodedParameterString];
+	NSString *subject = [@"Syndication support request" clUrlEncodedParameterString];
 	NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"mailto:%@?subject=%@", email, subject]];
 	
 	BOOL response = [[NSWorkspace sharedWorkspace] openURL:url];
@@ -4826,7 +4826,7 @@ static NSArray *preferencesToolbarItems;
 			itemImage = [[[NSImage alloc] initWithContentsOfFile:rssIconName] autorelease];
 		}
 		
-		NSImage *imageThumb = [itemImage ayThumbnail:NSMakeSize(16, 16)];
+		NSImage *imageThumb = [itemImage clThumbnail:NSMakeSize(16, 16)];
 		
 		NSMenuItem *menuItem = [[NSMenuItem alloc] init];
 		[menuItem setTitle:[item extractTitleForDisplay]];

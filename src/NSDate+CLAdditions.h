@@ -8,6 +8,6 @@
 
 @interface NSDate (CLAdditions)
 
-- (NSString *)ayStringForDisplay;
+- (NSString *)clStringForDisplay;
 
 @end

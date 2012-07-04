@@ -53,7 +53,7 @@ static NSImage *unreadDot;
 	titleRect = NSMakeRect(titleRect.origin.x + 22, titleRect.origin.y + 1, titleRect.size.width - 27, 20);
 	
 	// date
-	NSString *dateString = [[post received] ayStringForDisplay];
+	NSString *dateString = [[post received] clStringForDisplay];
 	
 	NSMutableDictionary *attributes = [NSMutableDictionary dictionary];
 	[attributes setObject:font forKey:NSFontAttributeName];

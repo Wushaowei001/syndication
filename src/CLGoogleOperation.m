@@ -174,8 +174,8 @@
 	
 	NSDictionary *authResponseDict = nil;
 	NSString *authurlString = @"https://www.google.com/accounts/ClientLogin";
-	NSString *escapedEmail = [email ayUrlEncodedParameterString];
-	NSString *escapedPassword = [password ayUrlEncodedParameterString];
+	NSString *escapedEmail = [email clUrlEncodedParameterString];
+	NSString *escapedPassword = [password clUrlEncodedParameterString];
 	NSString *postString = [NSString stringWithFormat:@"accountType=HOSTED_OR_GOOGLE&Email=%@&Passwd=%@&service=reader&source=%@", escapedEmail, escapedPassword, GOOGLE_READER_CLIENT];
 	NSData *postData = [postString dataUsingEncoding:NSUTF8StringEncoding];
 	
@@ -208,22 +208,22 @@
 }
 
 - (NSData *)fetch:(NSInteger)count itemsForUrlString:(NSString *)urlString since:(NSInteger)since usingAuth:(NSString *)auth statusCode:(NSInteger *)statusCode {
-	NSString *requesturlString = [NSString stringWithFormat:@"https://www.google.com/reader/api/0/stream/contents/%@?output=json&ot=%qi&r=n&n=%qi&ck=%qi&client=%@", [urlString ayUrlEncodedParameterString], since, count, (long long)[[NSDate date] timeIntervalSince1970], GOOGLE_READER_CLIENT];
+	NSString *requesturlString = [NSString stringWithFormat:@"https://www.google.com/reader/api/0/stream/contents/%@?output=json&ot=%qi&r=n&n=%qi&ck=%qi&client=%@", [urlString clUrlEncodedParameterString], since, count, (long long)[[NSDate date] timeIntervalSince1970], GOOGLE_READER_CLIENT];
 	return [self fetchUrlString:requesturlString postData:nil usingAuth:auth returnNilOnFailure:YES statusCode:statusCode];
 }
 
 - (NSData *)fetch:(NSInteger)count itemsForUrlString:(NSString *)urlString since:(NSInteger)since continuation:(NSString *)continuation usingAuth:(NSString *)auth statusCode:(NSInteger *)statusCode {
-	NSString *requesturlString = [NSString stringWithFormat:@"https://www.google.com/reader/api/0/stream/contents/%@?output=json&ot=%qi&r=n&n=%qi&ck=%qi&c=%@&client=%@", [urlString ayUrlEncodedParameterString], since, count, (long long)[[NSDate date] timeIntervalSince1970], continuation, GOOGLE_READER_CLIENT];
+	NSString *requesturlString = [NSString stringWithFormat:@"https://www.google.com/reader/api/0/stream/contents/%@?output=json&ot=%qi&r=n&n=%qi&ck=%qi&c=%@&client=%@", [urlString clUrlEncodedParameterString], since, count, (long long)[[NSDate date] timeIntervalSince1970], continuation, GOOGLE_READER_CLIENT];
 	return [self fetchUrlString:requesturlString postData:nil usingAuth:auth returnNilOnFailure:YES statusCode:statusCode];
 }
 
 - (NSData *)fetch:(NSInteger)count unreadItemsForUrlString:(NSString *)urlString since:(NSInteger)since usingAuth:(NSString *)auth statusCode:(NSInteger *)statusCode {
-	NSString *requesturlString = [NSString stringWithFormat:@"https://www.google.com/reader/api/0/stream/contents/%@?output=json&xt=user/-/state/com.google/read&ot=%qi&r=n&n=%qi&ck=%qi&client=%@", [urlString ayUrlEncodedParameterString], since, count, (long long)[[NSDate date] timeIntervalSince1970], GOOGLE_READER_CLIENT];
+	NSString *requesturlString = [NSString stringWithFormat:@"https://www.google.com/reader/api/0/stream/contents/%@?output=json&xt=user/-/state/com.google/read&ot=%qi&r=n&n=%qi&ck=%qi&client=%@", [urlString clUrlEncodedParameterString], since, count, (long long)[[NSDate date] timeIntervalSince1970], GOOGLE_READER_CLIENT];
 	return [self fetchUrlString:requesturlString postData:nil usingAuth:auth returnNilOnFailure:YES statusCode:statusCode];
 }
 
 - (NSData *)fetch:(NSInteger)count unreadItemsForUrlString:(NSString *)urlString since:(NSInteger)since continuation:(NSString *)continuation usingAuth:(NSString *)auth statusCode:(NSInteger *)statusCode {
-	NSString *requesturlString = [NSString stringWithFormat:@"https://www.google.com/reader/api/0/stream/contents/%@?output=json&xt=user/-/state/com.google/read&ot=%qi&r=n&n=%qi&ck=%qi&c=%@&client=%@", [urlString ayUrlEncodedParameterString], since, count, (long long)[[NSDate date] timeIntervalSince1970], continuation, GOOGLE_READER_CLIENT];
+	NSString *requesturlString = [NSString stringWithFormat:@"https://www.google.com/reader/api/0/stream/contents/%@?output=json&xt=user/-/state/com.google/read&ot=%qi&r=n&n=%qi&ck=%qi&c=%@&client=%@", [urlString clUrlEncodedParameterString], since, count, (long long)[[NSDate date] timeIntervalSince1970], continuation, GOOGLE_READER_CLIENT];
 	return [self fetchUrlString:requesturlString postData:nil usingAuth:auth returnNilOnFailure:YES statusCode:statusCode];
 }
 
@@ -244,9 +244,9 @@
 
 - (NSData *)addToFolder:(NSString *)folder forUrlString:(NSString *)urlString token:(NSString *)token auth:(NSString *)auth statusCode:(NSInteger *)statusCode {
 	NSString *requesturlString = [NSString stringWithFormat:@"https://www.google.com/reader/api/0/subscription/edit?client=%@", GOOGLE_READER_CLIENT];
-	NSString *escapedFolder = [folder ayUrlEncodedParameterString];
-	NSString *escapedUrlString = [urlString ayUrlEncodedParameterString];
-	NSString *escapedToken = [token ayUrlEncodedParameterString];
+	NSString *escapedFolder = [folder clUrlEncodedParameterString];
+	NSString *escapedUrlString = [urlString clUrlEncodedParameterString];
+	NSString *escapedToken = [token clUrlEncodedParameterString];
 	NSString *postString = [NSString stringWithFormat:@"s=%@&ac=edit&a=user/-/label/%@&T=%@", escapedUrlString, escapedFolder, escapedToken];
 	NSData *postData = [postString dataUsingEncoding:NSUTF8StringEncoding];
 	return [self fetchUrlString:requesturlString postData:postData usingAuth:auth returnNilOnFailure:YES statusCode:statusCode];
@@ -254,9 +254,9 @@
 
 - (NSData *)removeFromFolder:(NSString *)folder forUrlString:(NSString *)urlString token:(NSString *)token auth:(NSString *)auth statusCode:(NSInteger *)statusCode {
 	NSString *requesturlString = [NSString stringWithFormat:@"https://www.google.com/reader/api/0/subscription/edit?client=%@", GOOGLE_READER_CLIENT];
-	NSString *escapedFolder = [folder ayUrlEncodedParameterString];
-	NSString *escapedUrlString = [urlString ayUrlEncodedParameterString];
-	NSString *escapedToken = [token ayUrlEncodedParameterString];
+	NSString *escapedFolder = [folder clUrlEncodedParameterString];
+	NSString *escapedUrlString = [urlString clUrlEncodedParameterString];
+	NSString *escapedToken = [token clUrlEncodedParameterString];
 	NSString *postString = [NSString stringWithFormat:@"s=%@&ac=edit&r=user/-/label/%@&T=%@", escapedUrlString, escapedFolder, escapedToken];
 	NSData *postData = [postString dataUsingEncoding:NSUTF8StringEncoding];
 	return [self fetchUrlString:requesturlString postData:postData usingAuth:auth returnNilOnFailure:YES statusCode:statusCode];
@@ -264,10 +264,10 @@
 
 - (NSData *)addTag:(NSString *)tag forUrlString:(NSString *)urlString item:(NSString *)item token:(NSString *)token auth:(NSString *)auth statusCode:(NSInteger *)statusCode {
 	NSString *requesturlString = [NSString stringWithFormat:@"https://www.google.com/reader/api/0/edit-tag?client=%@", GOOGLE_READER_CLIENT];
-	NSString *escapedTag = [tag ayUrlEncodedParameterString];
-	NSString *escapedUrlString = [urlString ayUrlEncodedParameterString];
-	NSString *escapedItem = [item ayUrlEncodedParameterString];
-	NSString *escapedToken = [token ayUrlEncodedParameterString];
+	NSString *escapedTag = [tag clUrlEncodedParameterString];
+	NSString *escapedUrlString = [urlString clUrlEncodedParameterString];
+	NSString *escapedItem = [item clUrlEncodedParameterString];
+	NSString *escapedToken = [token clUrlEncodedParameterString];
 	NSString *postString = [NSString stringWithFormat:@"a=%@&s=%@&i=%@&T=%@", escapedTag, escapedUrlString, escapedItem, escapedToken];
 	NSData *postData = [postString dataUsingEncoding:NSUTF8StringEncoding];
 	return [self fetchUrlString:requesturlString postData:postData usingAuth:auth returnNilOnFailure:YES statusCode:statusCode];
@@ -275,10 +275,10 @@
 
 - (NSData *)removeTag:(NSString *)tag forUrlString:(NSString *)urlString item:(NSString *)item token:(NSString *)token auth:(NSString *)auth statusCode:(NSInteger *)statusCode {
 	NSString *requesturlString = [NSString stringWithFormat:@"https://www.google.com/reader/api/0/edit-tag?client=%@", GOOGLE_READER_CLIENT];
-	NSString *escapedTag = [tag ayUrlEncodedParameterString];
-	NSString *escapedUrlString = [urlString ayUrlEncodedParameterString];
-	NSString *escapedItem = [item ayUrlEncodedParameterString];
-	NSString *escapedToken = [token ayUrlEncodedParameterString];
+	NSString *escapedTag = [tag clUrlEncodedParameterString];
+	NSString *escapedUrlString = [urlString clUrlEncodedParameterString];
+	NSString *escapedItem = [item clUrlEncodedParameterString];
+	NSString *escapedToken = [token clUrlEncodedParameterString];
 	NSString *postString = [NSString stringWithFormat:@"r=%@&s=%@&i=%@&T=%@", escapedTag, escapedUrlString, escapedItem, escapedToken];
 	NSData *postData = [postString dataUsingEncoding:NSUTF8StringEncoding];
 	return [self fetchUrlString:requesturlString postData:postData usingAuth:auth returnNilOnFailure:YES statusCode:statusCode];
@@ -286,8 +286,8 @@
 
 - (NSData *)addSubscriptionForUrlString:(NSString *)urlString token:(NSString *)token auth:(NSString *)auth statusCode:(NSInteger *)statusCode {
 	NSString *requesturlString = [NSString stringWithFormat:@"https://www.google.com/reader/api/0/subscription/edit?client=%@", GOOGLE_READER_CLIENT];
-	NSString *escapedUrlString = [urlString ayUrlEncodedParameterString];
-	NSString *escapedToken = [token ayUrlEncodedParameterString];
+	NSString *escapedUrlString = [urlString clUrlEncodedParameterString];
+	NSString *escapedToken = [token clUrlEncodedParameterString];
 	NSString *postString = [NSString stringWithFormat:@"s=%@&ac=subscribe&T=%@", escapedUrlString, escapedToken];
 	NSData *postData = [postString dataUsingEncoding:NSUTF8StringEncoding];
 	return [self fetchUrlString:requesturlString postData:postData usingAuth:auth returnNilOnFailure:YES statusCode:statusCode];
@@ -295,8 +295,8 @@
 
 - (NSData *)deleteSubscriptionForUrlString:(NSString *)urlString token:(NSString *)token auth:(NSString *)auth statusCode:(NSInteger *)statusCode {
 	NSString *requesturlString = [NSString stringWithFormat:@"https://www.google.com/reader/api/0/subscription/edit?client=%@", GOOGLE_READER_CLIENT];
-	NSString *escapedUrlString = [urlString ayUrlEncodedParameterString];
-	NSString *escapedToken = [token ayUrlEncodedParameterString];
+	NSString *escapedUrlString = [urlString clUrlEncodedParameterString];
+	NSString *escapedToken = [token clUrlEncodedParameterString];
 	NSString *postString = [NSString stringWithFormat:@"s=%@&ac=unsubscribe&T=%@", escapedUrlString, escapedToken];
 	NSData *postData = [postString dataUsingEncoding:NSUTF8StringEncoding];
 	return [self fetchUrlString:requesturlString postData:postData usingAuth:auth returnNilOnFailure:YES statusCode:statusCode];
@@ -304,9 +304,9 @@
 
 - (NSData *)updateTitle:(NSString *)title forUrlString:(NSString *)urlString token:(NSString *)token auth:(NSString *)auth statusCode:(NSInteger *)statusCode {
 	NSString *requesturlString = [NSString stringWithFormat:@"https://www.google.com/reader/api/0/subscription/edit?client=%@", GOOGLE_READER_CLIENT];
-	NSString *escapedTitle = [title ayUrlEncodedParameterString];
-	NSString *escapedUrlString = [urlString ayUrlEncodedParameterString];
-	NSString *escapedToken = [token ayUrlEncodedParameterString];
+	NSString *escapedTitle = [title clUrlEncodedParameterString];
+	NSString *escapedUrlString = [urlString clUrlEncodedParameterString];
+	NSString *escapedToken = [token clUrlEncodedParameterString];
 	NSString *postString = [NSString stringWithFormat:@"s=%@&ac=edit&t=%@&T=%@", escapedUrlString, escapedTitle, escapedToken];
 	NSData *postData = [postString dataUsingEncoding:NSUTF8StringEncoding];
 	return [self fetchUrlString:requesturlString postData:postData usingAuth:auth returnNilOnFailure:YES statusCode:statusCode];
