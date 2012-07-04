@@ -19,7 +19,7 @@
 	BOOL isFromGoogle;
 	NSString *googleUrl;
 	NSString *websiteLink;
-	NSArray *newPosts;
+	NSArray *postsToAddToDB;
 	NSMutableArray *lastSyncPosts;
 	NSMutableSet *googleUnreadGuids;
 }
@@ -30,7 +30,7 @@
 @property (assign, nonatomic) BOOL isFromGoogle;
 @property (copy, nonatomic) NSString *googleUrl;
 @property (copy, nonatomic) NSString *websiteLink;
-@property (retain, nonatomic) NSArray *newPosts;
+@property (retain, nonatomic) NSArray *postsToAddToDB;
 @property (retain, nonatomic) NSMutableArray *lastSyncPosts;
 @property (retain, nonatomic) NSMutableSet *googleUnreadGuids;
 

@@ -1968,12 +1968,12 @@ static NSArray *preferencesToolbarItems;
 
 - (void)feedParserOperationFoundNewPostsForFeed:(CLSourceListFeed *)feed {
 	
-	CLLog(@"new posts: %qi", [[feed newPosts] count]);
+	CLLog(@"new posts: %qi", [[feed postsToAddToDB] count]);
 	
-	NSArray *newPosts = [feed newPosts];
+	NSArray *postsToAddToDB = [feed postsToAddToDB];
 	NSInteger numberOfUnread = 0;
 	
-	for (CLPost *post in newPosts) {
+	for (CLPost *post in postsToAddToDB) {
 		if ([post isRead] == NO) {
 			numberOfUnread++;
 		}
@@ -1985,7 +1985,7 @@ static NSArray *preferencesToolbarItems;
 		[self changeNewItemsBadgeValueBy:numberOfUnread];
 	}
 	
-	[self processNewPosts:newPosts forFeed:feed];
+	[self processNewPosts:postsToAddToDB forFeed:feed];
 }
 
 - (void)feedParserOperationFoundTitleForFeed:(CLSourceListFeed *)feed {

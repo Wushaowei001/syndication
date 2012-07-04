@@ -8,6 +8,7 @@
 
 #import "CLConstants.h"
 #import "CLPost.h"
+#import "CLTableView.h"
 #import "CLTableViewTextFieldCell.h"
 #import "NSDate+CLAdditions.h"
 #import "GTMNSString+HTML.h"

@@ -246,7 +246,7 @@
 					}
 				}
 				
-				[feed setNewPosts:newPosts];
+				[feed setPostsToAddToDB:newPosts];
 				
 				CLLog(@"found %qu new posts for %@", [newPosts count], [feed extractTitleForDisplay]);
 				
@@ -254,7 +254,7 @@
 			}
 		}
 		
-		[feed setNewPosts:nil];
+		[feed setPostsToAddToDB:nil];
 		
 		NSMutableArray *syncPosts = [NSMutableArray array];
 		BOOL postsDidChange = NO;

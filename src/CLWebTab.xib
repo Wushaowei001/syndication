@@ -226,7 +226,7 @@
 							<object class="NSSegmentedControl" id="201058206">
 								<reference key="NSNextResponder" ref="876181780"/>
 								<int key="NSvFlags">268</int>
-								<string key="NSFrame">{{8, 5}, {55, 25}}</string>
+								<string key="NSFrame">{{8, 6}, {55, 25}}</string>
 								<reference key="NSSuperview" ref="876181780"/>
 								<reference key="NSWindow"/>
 								<reference key="NSNextKeyView" ref="9753942"/>
@@ -262,7 +262,6 @@
 									</object>
 									<int key="NSSelectedSegment">1</int>
 									<int key="NSTrackingMode">2</int>
-									<int key="NSSegmentStyle">2</int>
 								</object>
 							</object>
 							<object class="NSTextField" id="775684794">

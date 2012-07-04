@@ -17,7 +17,7 @@
 @synthesize isFromGoogle;
 @synthesize googleUrl;
 @synthesize websiteLink;
-@synthesize newPosts;
+@synthesize postsToAddToDB;
 @synthesize lastSyncPosts;
 @synthesize googleUnreadGuids;
 
@@ -46,7 +46,7 @@
 	[url release];
 	[googleUrl release];
 	[websiteLink release];
-	[newPosts release];
+	[postsToAddToDB release];
 	[lastSyncPosts release];
 	[googleUnreadGuids release];
 	
