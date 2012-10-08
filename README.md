@@ -7,7 +7,6 @@ Syndication is a feed reader for Mac OS X with a focus on usability.
 
 ## Features
 
-* Classic View (pictured above) or Timeline View (continuous stream of news like Google Reader)
 * OPML import/export
 * customizable fonts
 * organize your feeds into folders using drag-and-drop
