@@ -85,6 +85,8 @@
 		3E6C906813969AEB00F3CD7B /* Acknowledgments.html in Resources */ = {isa = PBXBuildFile; fileRef = 3E6C906713969AEB00F3CD7B /* Acknowledgments.html */; };
 		3E6C9540139AF1CE00F3CD7B /* inbox-table.png in Resources */ = {isa = PBXBuildFile; fileRef = 3E6C953F139AF1CE00F3CD7B /* inbox-table.png */; };
 		3EA07122131DF1410022A59F /* tabCloseHover.png in Resources */ = {isa = PBXBuildFile; fileRef = 3EA07121131DF1410022A59F /* tabCloseHover.png */; };
+		3EA19DC4162359310052387A /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3EA19DC3162359310052387A /* Sparkle.framework */; };
+		3EA19DC5162359960052387A /* Sparkle.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 3EA19DC3162359310052387A /* Sparkle.framework */; };
 		3EB049C41374888500582C4C /* unreadDot.png in Resources */ = {isa = PBXBuildFile; fileRef = 3EB049C31374888500582C4C /* unreadDot.png */; };
 		3EB4592F1375B45700E3F570 /* GTMNSString+HTML.m in Sources */ = {isa = PBXBuildFile; fileRef = 3EB4592E1375B45700E3F570 /* GTMNSString+HTML.m */; };
 		3EB9A0D712F9FE2200CC6302 /* FMDatabase.m in Sources */ = {isa = PBXBuildFile; fileRef = 3EB9A0D212F9FE2200CC6302 /* FMDatabase.m */; };
@@ -106,8 +108,9 @@
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "";
-			dstSubfolderSpec = 7;
+			dstSubfolderSpec = 10;
 			files = (
+				3EA19DC5162359960052387A /* Sparkle.framework in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -272,6 +275,7 @@
 		3E6C906713969AEB00F3CD7B /* Acknowledgments.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; path = Acknowledgments.html; sourceTree = "<group>"; };
 		3E6C953F139AF1CE00F3CD7B /* inbox-table.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "inbox-table.png"; sourceTree = "<group>"; };
 		3EA07121131DF1410022A59F /* tabCloseHover.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = tabCloseHover.png; sourceTree = "<group>"; };
+		3EA19DC3162359310052387A /* Sparkle.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Sparkle.framework; sourceTree = "<group>"; };
 		3EB049C31374888500582C4C /* unreadDot.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = unreadDot.png; sourceTree = "<group>"; };
 		3EB4592D1375B45700E3F570 /* GTMNSString+HTML.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "GTMNSString+HTML.h"; sourceTree = "<group>"; };
 		3EB4592E1375B45700E3F570 /* GTMNSString+HTML.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "GTMNSString+HTML.m"; sourceTree = "<group>"; };
@@ -301,6 +305,7 @@
 				3EB9A8791300AFF200CC6302 /* WebKit.framework in Frameworks */,
 				3EFDF683135CAB6400F3F261 /* QuartzCore.framework in Frameworks */,
 				3E1944C113AD796400D9D204 /* IOKit.framework in Frameworks */,
+				3EA19DC4162359310052387A /* Sparkle.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -343,6 +348,7 @@
 		1058C7A2FEA54F0111CA2CBB /* Other Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				3EA19DC3162359310052387A /* Sparkle.framework */,
 			);
 			name = "Other Frameworks";
 			sourceTree = "<group>";
@@ -940,7 +946,10 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)\"",
+				);
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -967,7 +976,10 @@
 				CODE_SIGN_IDENTITY = "";
 				COMBINE_HIDPI_IMAGES = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)\"",
+				);
 				GCC_MODEL_TUNING = G5;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = Syndication_Prefix.pch;

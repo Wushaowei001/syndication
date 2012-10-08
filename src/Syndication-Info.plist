@@ -41,6 +41,8 @@
 	<string>Copyright © 2012 Calvin Lough</string>
 	<key>NSMainNibFile</key>
 	<string>MainMenu</string>
+	<key>SUFeedURL</key>
+	<string>https://raw.github.com/calvinlough/syndication/gh-pages/appcast.xml</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 </dict>
