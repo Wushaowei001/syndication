@@ -13,6 +13,10 @@ Syndication is a feed reader for Mac OS X with a focus on usability.
 * full text search
 * syncs with Google Reader
 
+## Requirements
+
+Mac OS 10.7+
+
 ## Download
 
 See ![Downloads](https://github.com/calvinlough/syndication/downloads)
