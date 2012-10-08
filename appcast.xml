@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle"  xmlns:dc="http://purl.org/dc/elements/1.1/">
+   <channel>
+      <title>Syndication's Changelog</title>
+      <link>https://raw.github.com/calvinlough/syndication/gh-pages/appcast.xml</link>
+      <description>Most recent changes with links to updates.</description>
+      <language>en</language>
+         <item>
+            <title>Version 1.1.0</title>
+			<description><![CDATA[
+			Initial release
+			]]></description>
+            <pubDate>Mon, 08 Oct 2012 21:55:15 -0000</pubDate>
+            <enclosure url="https://raw.github.com/calvinlough/syndication/gh-pages/Syndication 1.1.0.zip" sparkle:version="1.1.0" length="1177294" type="application/octet-stream" />
+         </item>
+   </channel>
+</rss>
