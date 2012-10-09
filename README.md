@@ -19,7 +19,7 @@ Mac OS 10.7+
 
 ## Download
 
-See ![Downloads](https://github.com/calvinlough/syndication/downloads)
+See [Downloads](https://github.com/calvinlough/syndication/downloads)
 
 ## License
 
