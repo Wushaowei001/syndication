@@ -94,7 +94,7 @@
 		
 		while (postsData != nil) {
 			
-			NSDictionary *postsDictionary = [postsData objectFromJSONDataWithParseOptions:JKParseOptionRecover];
+			NSDictionary *postsDictionary = [postsData objectFromJSONDataWithParseOptions:JKParseOptionNone];
 			postsData = nil; // prevent infinite loop
 			
 			if (postsDictionary != nil) {
@@ -152,7 +152,7 @@
 		
 		while (postsData != nil) {
 			
-			NSDictionary *postsDictionary = [postsData objectFromJSONDataWithParseOptions:JKParseOptionRecover];
+			NSDictionary *postsDictionary = [postsData objectFromJSONDataWithParseOptions:JKParseOptionNone];
 			postsData = nil; // this line is neccessary to prevent infinite loop
 			
 			if (postsDictionary != nil) {
