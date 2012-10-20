@@ -449,7 +449,7 @@
 		isOnlyUnreadItems = YES;
 	}
 	
-	[dbQuery appendString:@" ORDER BY post.Received DESC, post.Id DESC"];
+	[dbQuery appendString:@" ORDER BY post.Id DESC"];
 	
 	if (timeline != nil) {
 		if (bottom) {

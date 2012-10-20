@@ -555,36 +555,6 @@ static NSArray *preferencesToolbarItems;
 	
 	[self recursivelyLoadChildrenOf:nil usingDatabaseHandle:db];
 	
-#ifndef NDEBUG
-	
-	// database sanity checks
-	NSInteger count1 = 0;
-	NSInteger count2 = 0;
-	
-	rs = [db executeQuery:@"SELECT SUM(UnreadCount) AS Count FROM feed"];
-	
-	if ([rs next]) {
-		count1 = [rs longForColumn:@"Count"];
-	}
-	
-	[rs close];
-	
-	rs = [db executeQuery:@"SELECT COUNT(Id) AS Count FROM post WHERE IsRead=0"];
-	
-	if ([rs next]) {
-		count2 = [rs longForColumn:@"Count"];
-	}
-	
-	[rs close];
-	
-	CLLog(@"counts: %qi - %qi", count1, count2);
-	
-	if (count1 != count2) {
-		[NSException raise:@"error" format:@"counts don't match"];
-	}
-	
-#endif
-	
 	[db close];
 	
 	NSString *versionId = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"];
@@ -1669,7 +1639,7 @@ static NSArray *preferencesToolbarItems;
 									NSInteger i = 0;
 									
 									for (CLTimelineViewItem *item in [timeline timelineViewItems]) {
-										if ([[item postDate] compare:[post received]] == NSOrderedAscending) {
+										if ([item dbId] < [post dbId]) {
 											insertLocation = i;
 											break;
 										}
@@ -1748,7 +1718,7 @@ static NSArray *preferencesToolbarItems;
 								NSInteger i = 0;
 								
 								for (CLPost *item in [classicView posts]) {
-									if ([[item received] compare:[post received]] == NSOrderedAscending) {
+									if ([item dbId] < [post dbId]) {
 										insertLocation = i;
 										break;
 									}
