@@ -1639,7 +1639,7 @@ static NSArray *preferencesToolbarItems;
 									NSInteger i = 0;
 									
 									for (CLTimelineViewItem *item in [timeline timelineViewItems]) {
-										if ([item dbId] < [post dbId]) {
+										if ([item postDbId] < [post dbId]) {
 											insertLocation = i;
 											break;
 										}
