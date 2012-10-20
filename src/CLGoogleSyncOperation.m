@@ -47,7 +47,7 @@
 		}
 		
 		if ([CLUrlFetcher isSuccessStatusCode:statusCode] && feedData != nil) {
-			NSDictionary *feedDictionary = [feedData objectFromJSONDataWithParseOptions:JKParseOptionRecover];
+			NSDictionary *feedDictionary = [feedData objectFromJSONDataWithParseOptions:JKParseOptionNone];
 			
 			if (feedDictionary != nil) {
 				NSArray *subscriptions = [feedDictionary objectForKey:@"subscriptions"];
@@ -92,7 +92,7 @@
 					NSMutableDictionary *feedUnreadCountDictionary = [NSMutableDictionary dictionary];
 					
 					if (unreadData != nil) {
-						NSDictionary *unreadDictionary = [unreadData objectFromJSONDataWithParseOptions:JKParseOptionRecover];
+						NSDictionary *unreadDictionary = [unreadData objectFromJSONDataWithParseOptions:JKParseOptionNone];
 						
 						if (unreadDictionary != nil) {
 							NSArray *unreadSubscriptions = [unreadDictionary objectForKey:@"unreadcounts"];
