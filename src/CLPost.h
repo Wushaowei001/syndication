@@ -22,6 +22,7 @@
 	NSString *content;
 	NSString *plainTextContent;
 	BOOL isRead;
+	BOOL isStarred;
 	NSMutableArray *enclosures;
 }
 
@@ -38,6 +39,7 @@
 @property (copy, nonatomic) NSString *content;
 @property (copy, nonatomic) NSString *plainTextContent;
 @property (assign, nonatomic) BOOL isRead;
+@property (assign, nonatomic) BOOL isStarred;
 @property (retain, nonatomic) NSMutableArray *enclosures;
 
 - (id)initWithJSON:(NSDictionary *)json;

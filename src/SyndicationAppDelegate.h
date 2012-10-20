@@ -74,7 +74,6 @@
 	NSWindow *opmlLoadingWindow;
 	NSProgressIndicator *opmlLoadingProgressIndicator;
 	BOOL inLiveResize;
-	NSMutableArray *starredItemsDbIds;
 	NSWindow *windowForUpdate;
 	BOOL hasFinishedLaunching;
 	NSString *feedEventString;
@@ -124,7 +123,6 @@
 @property (assign, nonatomic) IBOutlet NSWindow *opmlLoadingWindow;
 @property (assign, nonatomic) IBOutlet NSProgressIndicator *opmlLoadingProgressIndicator;
 @property (assign, nonatomic) BOOL inLiveResize;
-@property (retain, nonatomic) NSMutableArray *starredItemsDbIds;
 @property (retain, nonatomic) NSWindow *windowForUpdate;
 @property (assign, nonatomic) BOOL hasFinishedLaunching;
 @property (retain, nonatomic) NSString *feedEventString;

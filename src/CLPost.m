@@ -26,6 +26,7 @@
 @synthesize content;
 @synthesize plainTextContent;
 @synthesize isRead;
+@synthesize isStarred;
 @synthesize enclosures;
 
 - (id)init {
@@ -159,6 +160,7 @@
 	[self setContent:[rs stringForColumn:@"Content"]];
 	[self setPlainTextContent:[rs stringForColumn:@"PlainTextContent"]];
 	[self setIsRead:[rs boolForColumn:@"IsRead"]];
+	[self setIsStarred:[rs boolForColumn:@"IsStarred"]];
 }
 
 - (NSComparisonResult)publishedDateCompare:(CLPost *)otherPost {

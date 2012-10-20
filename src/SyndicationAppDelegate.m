@@ -120,7 +120,6 @@ static NSArray *preferencesToolbarItems;
 @synthesize opmlLoadingWindow;
 @synthesize opmlLoadingProgressIndicator;
 @synthesize inLiveResize;
-@synthesize starredItemsDbIds;
 @synthesize windowForUpdate;
 @synthesize hasFinishedLaunching;
 @synthesize feedEventString;
@@ -299,7 +298,6 @@ static NSArray *preferencesToolbarItems;
 		[self setPreferenceDisplayUnreadCountInDock:NO];
 		[self setShowingWelcomeWindow:NO];
 		[self setIsFirstWindow:YES];
-		[self setStarredItemsDbIds:[NSMutableArray array]];
 	}
 	
 	return self;
@@ -337,7 +335,6 @@ static NSArray *preferencesToolbarItems;
 	[activityViewGoogleFeeds release];
 	[windowControllers release];
 	[preferencesWindow release]; // release top level object of preferences nib file
-	[starredItemsDbIds release];
 	[windowForUpdate release];
 	[feedEventString release];
 	
@@ -544,14 +541,6 @@ static NSArray *preferencesToolbarItems;
 			[rs close];
 		}
 	}
-	
-	FMResultSet *rs = [db executeQuery:@"SELECT Id FROM post WHERE IsStarred=1"];
-	
-	while ([rs next]) {
-		[starredItemsDbIds addObject:[NSNumber numberWithInteger:[rs longForColumn:@"Id"]]];
-	}
-	
-	[rs close];
 	
 	[self recursivelyLoadChildrenOf:nil usingDatabaseHandle:db];
 	
@@ -3887,7 +3876,7 @@ static NSArray *preferencesToolbarItems;
 	
 	[db close];
 	
-	[starredItemsDbIds addObject:[NSNumber numberWithInteger:[post dbId]]];
+	[post setIsStarred:YES];
 	
 	[self addPostsToAllWindows:[NSArray arrayWithObject:post] forFeed:nil orNewItems:NO orStarredItems:YES];
 	
@@ -3961,7 +3950,7 @@ static NSArray *preferencesToolbarItems;
 	
 	[db close];
 	
-	[starredItemsDbIds removeObject:[NSNumber numberWithInteger:[post dbId]]];
+	[post setIsStarred:NO];
 	
 	[self removeStarredPostFromAllWindows:post];
 	
@@ -4318,13 +4307,7 @@ static NSArray *preferencesToolbarItems;
 			}
 			
 			if (post != nil) {
-				BOOL hasStarAlready = NO;
-				
-				if ([starredItemsDbIds containsObject:[NSNumber numberWithInteger:[post dbId]]]) {
-					hasStarAlready = YES;
-				}
-				
-				if (hasStarAlready == NO) {
+				if (![post isStarred]) {
 					[self addStarToPost:post propagateChangesToGoogle:YES];
 				}
 			}
@@ -4358,13 +4341,7 @@ static NSArray *preferencesToolbarItems;
 			}
 			
 			if (post != nil) {
-				BOOL hasStarAlready = NO;
-				
-				if ([starredItemsDbIds containsObject:[NSNumber numberWithInteger:[post dbId]]]) {
-					hasStarAlready = YES;
-				}
-				
-				if (hasStarAlready == YES) {
+				if ([post isStarred]) {
 					[self removeStarFromPost:post propagateChangesToGoogle:YES];
 				}
 			}
@@ -5053,15 +5030,11 @@ static NSArray *preferencesToolbarItems;
 			}
 			
 			if (selectedItemDbId > 0) {
-				BOOL hasStarAlready = NO;
+				CLPost *post = [self postForDbId:selectedItemDbId];
 				
-				if ([starredItemsDbIds containsObject:[NSNumber numberWithInteger:selectedItemDbId]]) {
-					hasStarAlready = YES;
-				}
-				
-				if (hasStarAlready == NO && [anItem action] == @selector(addStar:)) {
+				if ([post isStarred] == NO && [anItem action] == @selector(addStar:)) {
 					return YES;
-				} else if (hasStarAlready == YES && [anItem action] == @selector(removeStar:)) {
+				} else if ([post isStarred] == YES && [anItem action] == @selector(removeStar:)) {
 					return YES;
 				}
 			}
