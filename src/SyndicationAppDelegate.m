@@ -461,6 +461,17 @@ static NSArray *preferencesToolbarItems;
 	[self setHasFinishedLaunching:YES];
 }
 
+- (BOOL)tableExists:(NSString *)tableName inDb:(FMDatabase *)db {
+    BOOL returnBool;
+    tableName = [tableName lowercaseString];
+	
+    FMResultSet *rs = [db executeQuery:@"select [sql] from sqlite_master where [type] = 'table' and lower(name) = ?", tableName];
+    returnBool = [rs next];
+    [rs close];
+    
+    return returnBool;
+}
+
 - (void)loadFromDatabase {
 	
 	NSString *previousVersion = [SyndicationAppDelegate miscellaneousValueForKey:MISCELLANEOUS_DATABASE_VERSION];
@@ -474,27 +485,27 @@ static NSArray *preferencesToolbarItems;
 	
 	[self setSubscriptionList:[NSMutableArray array]];
 	
-	if ([db tableExists:@"enclosure"] == NO) {
+	if ([self tableExists:@"enclosure" inDb:db] == NO) {
 		[db executeUpdate:@"CREATE TABLE enclosure (Id INTEGER PRIMARY KEY, PostId INTEGER, Url TEXT)"];
 	}
 	
-	if ([db tableExists:@"feed"] == NO) {
+	if ([self tableExists:@"feed" inDb:db] == NO) {
 		[db executeUpdate:@"CREATE TABLE feed (Id INTEGER PRIMARY KEY, FolderId INTEGER, Url TEXT, Title TEXT, Icon BLOB, LastRefreshed REAL, IconLastRefreshed REAL, IsFromGoogle INTEGER NOT NULL DEFAULT 0, GoogleUrl TEXT, GoogleNewestItemTimestamp INTEGER NOT NULL DEFAULT 0, WebsiteLink TEXT, IsHidden INTEGER NOT NULL DEFAULT 0, UnreadCount INTEGER NOT NULL DEFAULT 0, LastSyncPosts BLOB, GoogleUnreadGuids BLOB)"];
 	}
 	
-	if ([db tableExists:@"folder"] == NO) {
+	if ([self tableExists:@"folder" inDb:db] == NO) {
 		[db executeUpdate:@"CREATE TABLE folder (Id INTEGER PRIMARY KEY, ParentId INTEGER, Path TEXT, Title TEXT)"];
 	}
 	
-	if ([db tableExists:@"googleOperations"] == NO) {
+	if ([self tableExists:@"googleOperations" inDb:db] == NO) {
 		[db executeUpdate:@"CREATE TABLE googleOperations (Id INTEGER PRIMARY KEY, Type INTEGER, GoogleUrl TEXT, Title TEXT, Guid TEXT, Folder TEXT)"];
 	}
 	
-	if ([db tableExists:@"miscellaneous"] == NO) {
+	if ([self tableExists:@"miscellaneous" inDb:db] == NO) {
 		[db executeUpdate:@"CREATE TABLE miscellaneous (Id INTEGER PRIMARY KEY, Key TEXT, Value TEXT)"];
 	}
 	
-	if ([db tableExists:@"post"] == NO) {
+	if ([self tableExists:@"post" inDb:db] == NO) {
 		[db executeUpdate:@"CREATE TABLE post (Id INTEGER PRIMARY KEY, FeedId INTEGER, Guid TEXT, Title TEXT, Link TEXT, Published INTEGER, Received INTEGER, Author TEXT, Content TEXT, PlainTextContent TEXT, IsRead INTEGER NOT NULL DEFAULT 0, HasEnclosures INTEGER NOT NULL DEFAULT 0, IsHidden INTEGER NOT NULL DEFAULT 0, IsStarred INTEGER NOT NULL DEFAULT 0)"];
 	}
 	

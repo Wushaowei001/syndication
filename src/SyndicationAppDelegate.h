@@ -136,6 +136,7 @@
 + (NSString *)miscellaneousValueForKey:(NSString *)key;
 + (void)miscellaneousSetValue:(NSString *)value forKey:(NSString *)key;
 
+- (BOOL)tableExists:(NSString *)tableName inDb:(FMDatabase *)db;
 - (void)loadFromDatabase;
 - (void)recursivelyLoadChildrenOf:(CLSourceListFolder *)folder usingDatabaseHandle:(FMDatabase *)db;
 - (void)updateFeedSyncStatus;
