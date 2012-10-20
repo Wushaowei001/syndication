@@ -102,7 +102,7 @@
 	CLLog(@"url: %@", [[response URL] absoluteString]);
 	
 	if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
-		CLLog(@"status code: %qi", [(NSHTTPURLResponse *)response statusCode]);
+		CLLog(@"status code: %ld", [(NSHTTPURLResponse *)response statusCode]);
 		
 		NSDictionary *headers = [(NSHTTPURLResponse *)response allHeaderFields];
 		NSArray *keys = [headers allKeys];
@@ -128,7 +128,7 @@
 }
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
-	CLLog(@"didFailWithError %@ %qi", [feed extractTitleForDisplay], [error code]);
+	CLLog(@"didFailWithError %@ %ld", [feed extractTitleForDisplay], [error code]);
 	
 	if ([error code] == -1009) {
 		CLLog(@"feed parse offline... retrying %@ soon", [feed extractTitleForDisplay]);

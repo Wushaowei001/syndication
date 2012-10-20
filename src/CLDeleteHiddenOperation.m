@@ -118,7 +118,7 @@ static NSInteger modulo;
 					
 					for (CLPost *hiddenPost in hiddenPosts) {
 						if ([hiddenPost dbId] > 0) {
-							CLLog(@"deleting hidden post with dbid = %qi", [hiddenPost dbId]);
+							CLLog(@"deleting hidden post with dbid = %ld", [hiddenPost dbId]);
 							
 							[db executeUpdate:@"DELETE FROM enclosure WHERE PostId=?", [NSNumber numberWithInteger:[hiddenPost dbId]]];
 							[db executeUpdate:@"DELETE FROM post WHERE Id=?", [NSNumber numberWithInteger:[hiddenPost dbId]]];

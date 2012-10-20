@@ -46,7 +46,7 @@
 #define TIMELINE_POSTS_PER_QUERY 3
 #define CLASSIC_VIEW_POSTS_PER_QUERY 100
 #define SEARCH_QUERY @"SELECT post.*, feed.Title AS FeedTitle, feed.Url AS FeedUrlString FROM post, feed WHERE post.FeedId=feed.Id AND post.IsHidden=0 AND (%@)"
-#define FEED_QUERY @"SELECT post.*, feed.Title AS FeedTitle, feed.Url AS FeedUrlString FROM post, feed WHERE post.FeedId=feed.Id AND feed.Id=%qi AND post.IsHidden=0"
+#define FEED_QUERY @"SELECT post.*, feed.Title AS FeedTitle, feed.Url AS FeedUrlString FROM post, feed WHERE post.FeedId=feed.Id AND feed.Id=%ld AND post.IsHidden=0"
 #define FOLDER_QUERY @"SELECT post.*, feed.Title AS FeedTitle, feed.Url AS FeedUrlString FROM post, feed, folder WHERE post.FeedId=feed.Id AND feed.FolderId=folder.Id AND folder.Path LIKE '%@%%' AND post.IsHidden=0"
 #define NEW_ITEMS_QUERY @"SELECT post.*, feed.Title AS FeedTitle, feed.Url AS FeedUrlString FROM post, feed WHERE post.FeedId=feed.Id AND post.IsHidden=0 AND post.IsRead=0"
 #define STARRED_QUERY @"SELECT post.*, feed.Title AS FeedTitle, feed.Url AS FeedUrlString FROM post, feed WHERE post.FeedId=feed.Id AND post.IsHidden=0 AND post.IsStarred=1"
@@ -462,12 +462,12 @@
 					}
 				}
 				
-				[dbQuery appendFormat:@" LIMIT %qi, %qi", (range.location + [timeline postsMissingFromTopCount] - numberOfReadPosts), range.length];
+				[dbQuery appendFormat:@" LIMIT %ld, %ld", (range.location + [timeline postsMissingFromTopCount] - numberOfReadPosts), range.length];
 			} else {
-				[dbQuery appendFormat:@" LIMIT %qi, %qi", (range.location + [timeline postsMissingFromTopCount]), range.length];
+				[dbQuery appendFormat:@" LIMIT %ld, %ld", (range.location + [timeline postsMissingFromTopCount]), range.length];
 			}
 		} else {
-			[dbQuery appendFormat:@" LIMIT %qi, %qi", ((range.location + [timeline postsMissingFromTopCount]) - range.length), range.length];
+			[dbQuery appendFormat:@" LIMIT %ld, %ld", ((range.location + [timeline postsMissingFromTopCount]) - range.length), range.length];
 		}
 	} else {
 		if (isOnlyUnreadItems) {
@@ -479,9 +479,9 @@
 				}
 			}
 			
-			[dbQuery appendFormat:@" LIMIT %qi, %qi", (range.location - numberOfReadPosts), range.length];
+			[dbQuery appendFormat:@" LIMIT %ld, %ld", (range.location - numberOfReadPosts), range.length];
 		} else {
-			[dbQuery appendFormat:@" LIMIT %qi, %qi", range.location, range.length];
+			[dbQuery appendFormat:@" LIMIT %ld, %ld", range.location, range.length];
 		}
 	}
 	
@@ -826,7 +826,7 @@
 }
 
 - (void)changeWidthOfWindowBy:(NSInteger)change {
-	CLLog(@"change = %qi", change);
+	CLLog(@"change = %ld", change);
 	
 	if (change % 2) {
 		change++;
@@ -2243,7 +2243,7 @@
 			NSInteger numberOfPostsToRemove = numberOfPostsBeforeSelectedItem - threshold;
 			
 			if (numberOfPostsToRemove > 0) {
-				CLLog(@"removing %qi posts from top", numberOfPostsToRemove);
+				CLLog(@"removing %ld posts from top", numberOfPostsToRemove);
 				
 				[timelineView removePostsInRange:NSMakeRange(0, numberOfPostsToRemove) preserveScrollPosition:YES updateMetadata:YES];
 				[timelineView updateSubviewRects];
@@ -2561,7 +2561,7 @@
 		}
 		
 		if ([error code] != NSURLErrorCancelled) {
-			CLLog(@"didFailLoadWithError (%qi): %@", [error code], [error localizedDescription]);
+			CLLog(@"didFailLoadWithError (%ld): %@", [error code], [error localizedDescription]);
 			
 			if (tabType == CLWebType) {
 				[tabViewItem setIsLoading:NO];
@@ -2580,7 +2580,7 @@
 	
 	if (frame == [sender mainFrame]) {
 		if ([error code] != NSURLErrorCancelled) {
-			CLLog(@"didFailProvisionalLoadWithError (%qi): %@", [error code], [error localizedDescription]);
+			CLLog(@"didFailProvisionalLoadWithError (%ld): %@", [error code], [error localizedDescription]);
 			
 			if (tabType == CLWebType) {
 				[tabViewItem setIsLoading:NO];

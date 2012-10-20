@@ -198,42 +198,42 @@
 }
 
 - (NSData *)fetchFeedListUsingAuth:(NSString *)auth statusCode:(NSInteger *)statusCode {
-	NSString *requesturlString = [NSString stringWithFormat:@"https://www.google.com/reader/api/0/subscription/list?output=json&ck=%qi&client=%@", (long long)[[NSDate date] timeIntervalSince1970], GOOGLE_READER_CLIENT];
+	NSString *requesturlString = [NSString stringWithFormat:@"https://www.google.com/reader/api/0/subscription/list?output=json&ck=%lld&client=%@", (long long)[[NSDate date] timeIntervalSince1970], GOOGLE_READER_CLIENT];
 	return [self fetchUrlString:requesturlString postData:nil usingAuth:auth returnNilOnFailure:YES statusCode:statusCode];
 }
 
 - (NSData *)fetchUnreadCountsUsingAuth:(NSString *)auth statusCode:(NSInteger *)statusCode {
-	NSString *requesturlString = [NSString stringWithFormat:@"https://www.google.com/reader/api/0/unread-count?output=json&allcomments=true&ck=%qi&client=%@", (long long)[[NSDate date] timeIntervalSince1970], GOOGLE_READER_CLIENT];
+	NSString *requesturlString = [NSString stringWithFormat:@"https://www.google.com/reader/api/0/unread-count?output=json&allcomments=true&ck=%lld&client=%@", (long long)[[NSDate date] timeIntervalSince1970], GOOGLE_READER_CLIENT];
 	return [self fetchUrlString:requesturlString postData:nil usingAuth:auth returnNilOnFailure:YES statusCode:statusCode];
 }
 
 - (NSData *)fetch:(NSInteger)count itemsForUrlString:(NSString *)urlString since:(NSInteger)since usingAuth:(NSString *)auth statusCode:(NSInteger *)statusCode {
-	NSString *requesturlString = [NSString stringWithFormat:@"https://www.google.com/reader/api/0/stream/contents/%@?output=json&ot=%qi&r=n&n=%qi&ck=%qi&client=%@", [urlString clUrlEncodedParameterString], since, count, (long long)[[NSDate date] timeIntervalSince1970], GOOGLE_READER_CLIENT];
+	NSString *requesturlString = [NSString stringWithFormat:@"https://www.google.com/reader/api/0/stream/contents/%@?output=json&ot=%ld&r=n&n=%ld&ck=%lld&client=%@", [urlString clUrlEncodedParameterString], since, count, (long long)[[NSDate date] timeIntervalSince1970], GOOGLE_READER_CLIENT];
 	return [self fetchUrlString:requesturlString postData:nil usingAuth:auth returnNilOnFailure:YES statusCode:statusCode];
 }
 
 - (NSData *)fetch:(NSInteger)count itemsForUrlString:(NSString *)urlString since:(NSInteger)since continuation:(NSString *)continuation usingAuth:(NSString *)auth statusCode:(NSInteger *)statusCode {
-	NSString *requesturlString = [NSString stringWithFormat:@"https://www.google.com/reader/api/0/stream/contents/%@?output=json&ot=%qi&r=n&n=%qi&ck=%qi&c=%@&client=%@", [urlString clUrlEncodedParameterString], since, count, (long long)[[NSDate date] timeIntervalSince1970], continuation, GOOGLE_READER_CLIENT];
+	NSString *requesturlString = [NSString stringWithFormat:@"https://www.google.com/reader/api/0/stream/contents/%@?output=json&ot=%ld&r=n&n=%ld&ck=%lld&c=%@&client=%@", [urlString clUrlEncodedParameterString], since, count, (long long)[[NSDate date] timeIntervalSince1970], continuation, GOOGLE_READER_CLIENT];
 	return [self fetchUrlString:requesturlString postData:nil usingAuth:auth returnNilOnFailure:YES statusCode:statusCode];
 }
 
 - (NSData *)fetch:(NSInteger)count unreadItemsForUrlString:(NSString *)urlString since:(NSInteger)since usingAuth:(NSString *)auth statusCode:(NSInteger *)statusCode {
-	NSString *requesturlString = [NSString stringWithFormat:@"https://www.google.com/reader/api/0/stream/contents/%@?output=json&xt=user/-/state/com.google/read&ot=%qi&r=n&n=%qi&ck=%qi&client=%@", [urlString clUrlEncodedParameterString], since, count, (long long)[[NSDate date] timeIntervalSince1970], GOOGLE_READER_CLIENT];
+	NSString *requesturlString = [NSString stringWithFormat:@"https://www.google.com/reader/api/0/stream/contents/%@?output=json&xt=user/-/state/com.google/read&ot=%ld&r=n&n=%ld&ck=%lld&client=%@", [urlString clUrlEncodedParameterString], since, count, (long long)[[NSDate date] timeIntervalSince1970], GOOGLE_READER_CLIENT];
 	return [self fetchUrlString:requesturlString postData:nil usingAuth:auth returnNilOnFailure:YES statusCode:statusCode];
 }
 
 - (NSData *)fetch:(NSInteger)count unreadItemsForUrlString:(NSString *)urlString since:(NSInteger)since continuation:(NSString *)continuation usingAuth:(NSString *)auth statusCode:(NSInteger *)statusCode {
-	NSString *requesturlString = [NSString stringWithFormat:@"https://www.google.com/reader/api/0/stream/contents/%@?output=json&xt=user/-/state/com.google/read&ot=%qi&r=n&n=%qi&ck=%qi&c=%@&client=%@", [urlString clUrlEncodedParameterString], since, count, (long long)[[NSDate date] timeIntervalSince1970], continuation, GOOGLE_READER_CLIENT];
+	NSString *requesturlString = [NSString stringWithFormat:@"https://www.google.com/reader/api/0/stream/contents/%@?output=json&xt=user/-/state/com.google/read&ot=%ld&r=n&n=%ld&ck=%lld&c=%@&client=%@", [urlString clUrlEncodedParameterString], since, count, (long long)[[NSDate date] timeIntervalSince1970], continuation, GOOGLE_READER_CLIENT];
 	return [self fetchUrlString:requesturlString postData:nil usingAuth:auth returnNilOnFailure:YES statusCode:statusCode];
 }
 
 - (NSData *)fetch:(NSInteger)count starredItemsUsingAuth:(NSString *)auth statusCode:(NSInteger *)statusCode {
-	NSString *requesturlString = [NSString stringWithFormat:@"https://www.google.com/reader/api/0/stream/contents/user/-/state/com.google/starred?output=json&n=%qi&ck=%qi&client=%@", count, (long long)[[NSDate date] timeIntervalSince1970], GOOGLE_READER_CLIENT];
+	NSString *requesturlString = [NSString stringWithFormat:@"https://www.google.com/reader/api/0/stream/contents/user/-/state/com.google/starred?output=json&n=%ld&ck=%lld&client=%@", count, (long long)[[NSDate date] timeIntervalSince1970], GOOGLE_READER_CLIENT];
 	return [self fetchUrlString:requesturlString postData:nil usingAuth:auth returnNilOnFailure:YES statusCode:statusCode];
 }
 
 - (NSData *)fetch:(NSInteger)count starredItemsUsingAuth:(NSString *)auth continuation:(NSString *)continuation statusCode:(NSInteger *)statusCode {
-	NSString *requesturlString = [NSString stringWithFormat:@"https://www.google.com/reader/api/0/stream/contents/user/-/state/com.google/starred?output=json&n=%qi&ck=%qi&c=%@&client=%@", count, (long long)[[NSDate date] timeIntervalSince1970], continuation, GOOGLE_READER_CLIENT];
+	NSString *requesturlString = [NSString stringWithFormat:@"https://www.google.com/reader/api/0/stream/contents/user/-/state/com.google/starred?output=json&n=%ld&ck=%lld&c=%@&client=%@", count, (long long)[[NSDate date] timeIntervalSince1970], continuation, GOOGLE_READER_CLIENT];
 	return [self fetchUrlString:requesturlString postData:nil usingAuth:auth returnNilOnFailure:YES statusCode:statusCode];
 }
 

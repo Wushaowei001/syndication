@@ -197,7 +197,7 @@
 		NSMutableSet *unreadExternallyGuids = [NSMutableSet set];
 		
 		for (NSNumber *feedUnreadGuid in feedUnreadGuids) {
-			CLLog(@"count: %qi contains %@", [dbUnreadGuids count], feedUnreadGuid);
+			CLLog(@"count: %ld contains %@", [dbUnreadGuids count], feedUnreadGuid);
 			if ([dbUnreadGuids containsObject:feedUnreadGuid] == NO) {
 				CLLog(@"%@ was marked unread externally", feedUnreadGuid);
 				[unreadExternallyGuids addObject:feedUnreadGuid];
@@ -223,7 +223,7 @@
 				CLLog(@"looking up db id for %@", readExternallyGuid);
 				
 				if ([rs next]) {
-					CLLog(@"found %qi", [rs longForColumn:@"Id"]);
+					CLLog(@"found %ld", [rs longForColumn:@"Id"]);
 					[readExternallyDbIds addObject:[NSNumber numberWithInteger:[rs longForColumn:@"Id"]]];
 				}
 				
@@ -236,7 +236,7 @@
 				CLLog(@"looking up db id for %@", unreadExternallyGuid);
 				
 				if ([rs next]) {
-					CLLog(@"found %qi", [rs longForColumn:@"Id"]);
+					CLLog(@"found %ld", [rs longForColumn:@"Id"]);
 					[unreadExternallyDbIds addObject:[NSNumber numberWithInteger:[rs longForColumn:@"Id"]]];
 				}
 				

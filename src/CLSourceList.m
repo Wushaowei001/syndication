@@ -147,7 +147,7 @@ static NSImage *defaultIcon;
 		return NSZeroSize;
 	}
 	
-	NSAttributedString *badgeAttrString = [[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"%qi", [rowItem badgeValue]] attributes:[NSDictionary dictionaryWithObjectsAndKeys:BADGE_FONT, NSFontAttributeName, nil]];
+	NSAttributedString *badgeAttrString = [[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"%ld", [rowItem badgeValue]] attributes:[NSDictionary dictionaryWithObjectsAndKeys:BADGE_FONT, NSFontAttributeName, nil]];
 	
 	NSSize stringSize = [badgeAttrString size];
 	CGFloat width = stringSize.width + (2 * BADGE_MARGIN);
@@ -201,7 +201,7 @@ static NSImage *defaultIcon;
 	[backgroundColor set];
 	[badgePath fill];
 	
-	NSAttributedString *badgeAttrString = [[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"%qi", [rowItem badgeValue]] attributes:attributes];
+	NSAttributedString *badgeAttrString = [[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"%ld", [rowItem badgeValue]] attributes:attributes];
 	NSSize stringSize = [badgeAttrString size];
 	NSPoint badgeTextPoint = NSMakePoint(NSMidX(badgeFrame)-(stringSize.width/2.0)+1, NSMidY(badgeFrame)-(stringSize.height/2.0));
 	[badgeAttrString drawAtPoint:badgeTextPoint];

@@ -32,7 +32,7 @@
 	
 	if (postData != nil) {
 		[fetchUrlRequest setValue:@"application/x-www-form-urlencoded" forHTTPHeaderField:@"Content-Type"];
-		[fetchUrlRequest setValue:[NSString stringWithFormat:@"%qi", [postData length]] forHTTPHeaderField:@"Content-Length"];
+		[fetchUrlRequest setValue:[NSString stringWithFormat:@"%ld", [postData length]] forHTTPHeaderField:@"Content-Length"];
 		[fetchUrlRequest setHTTPMethod:@"POST"];
 		[fetchUrlRequest setHTTPBody:postData];
 	} else {
@@ -80,13 +80,13 @@
 	[[NSURLCache sharedURLCache] removeCachedResponseForRequest:fetchUrlRequest];
 	
 	if (fetchError != nil) {
-		CLLog(@"code = %qi, error = %@, recovery = %@", [fetchError code], [fetchError localizedDescription], [fetchError localizedRecoverySuggestion]);
+		CLLog(@"code = %ld, error = %@, recovery = %@", [fetchError code], [fetchError localizedDescription], [fetchError localizedRecoverySuggestion]);
 	}
 	
 	if ([fetchUrlResponse isKindOfClass:[NSHTTPURLResponse class]]) {
 		
 		if ([CLUrlFetcher isSuccessStatusCode:[(NSHTTPURLResponse *)fetchUrlResponse statusCode]] == NO) {
-			CLLog(@"%@ return code = %qi", urlString, [(NSHTTPURLResponse *)fetchUrlResponse statusCode]);
+			CLLog(@"%@ return code = %ld", urlString, [(NSHTTPURLResponse *)fetchUrlResponse statusCode]);
 			
 			NSDictionary *headers = [(NSHTTPURLResponse *)fetchUrlResponse allHeaderFields];
 			NSArray *keys = [headers allKeys];

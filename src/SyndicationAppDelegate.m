@@ -779,10 +779,10 @@ static NSArray *preferencesToolbarItems;
 - (void)startRequestIfNoneInProgress {
 	CLLog(@"startRequestIfNoneInProgress");
 	CLLog(@"requestInProgress: %@", requestInProgress ? @"YES" : @"NO");
-    CLLog(@"activeRequestType: %qi", activeRequestType);
+    CLLog(@"activeRequestType: %ld", activeRequestType);
     
     for (CLRequest *request in requestQueue) {
-        CLLog(@"request type: %qi", [request requestType]);
+        CLLog(@"request type: %ld", [request requestType]);
     }
     
     if ([feedRequests count] == 0 && [feedsToSync count] == 0 && [operationQueue operationCount] == 0 && [googleOperationQueue operationCount] == 0) {
@@ -892,15 +892,15 @@ static NSArray *preferencesToolbarItems;
 
 - (void)startFeedRequests {
 	CLLog(@"startFeedRequests");
-    CLLog(@"feedsToSync: %qi", [feedsToSync count]);
+    CLLog(@"feedsToSync: %ld", [feedsToSync count]);
     
     for (CLFeedRequest *feedRequest in feedRequests) {
         CLLog(@"feed request: %@", [[feedRequest feed] extractTitleForDisplay]);
     }
     
-	CLLog(@"numberOfActiveParseOps: %qi", numberOfActiveParseOps);
-    CLLog(@"operationQueue: %qi", [operationQueue operationCount]);
-    CLLog(@"googleOperationQueue: %qi", [googleOperationQueue operationCount]);
+	CLLog(@"numberOfActiveParseOps: %ld", numberOfActiveParseOps);
+    CLLog(@"operationQueue: %ld", [operationQueue operationCount]);
+    CLLog(@"googleOperationQueue: %ld", [googleOperationQueue operationCount]);
 	
 	while ([feedsToSync count] > 0 && ([feedRequests count] + numberOfActiveParseOps) < MAX_CONCURRENT_REQUESTS) {
 		
@@ -922,13 +922,13 @@ static NSArray *preferencesToolbarItems;
 		CLLog(@"starting feed request for %@", [feed extractTitleForDisplay]);
 	}
 	
-	CLLog(@"feedsToSync: %qi", [feedsToSync count]);
+	CLLog(@"feedsToSync: %ld", [feedsToSync count]);
     
     for (CLFeedRequest *feedRequest in feedRequests) {
         CLLog(@"feed request: %@", [[feedRequest feed] extractTitleForDisplay]);
     }
     
-	CLLog(@"numberOfActiveParseOps: %qi", numberOfActiveParseOps);
+	CLLog(@"numberOfActiveParseOps: %ld", numberOfActiveParseOps);
 }
 
 - (void)feedRequest:(CLFeedRequest *)feedRequest didFinishWithData:(NSData *)data encoding:(NSStringEncoding)encoding {
@@ -1281,7 +1281,7 @@ static NSArray *preferencesToolbarItems;
 		NSString *guid = [rs stringForColumn:@"Guid"];
 		NSString *folder = [rs stringForColumn:@"Folder"];
 		
-		CLLog(@"requeueing op of type %qi url %@", opType, googleUrl);
+		CLLog(@"requeueing op of type %ld url %@", opType, googleUrl);
 		
 		if (opType == CLAddFeedType) {
 			[self queueGoogleAddFeedForGoogleUrl:googleUrl addToDb:NO];
@@ -1927,7 +1927,7 @@ static NSArray *preferencesToolbarItems;
 
 - (void)feedParserOperationFoundNewPostsForFeed:(CLSourceListFeed *)feed {
 	
-	CLLog(@"new posts: %qi", [[feed postsToAddToDB] count]);
+	CLLog(@"new posts: %ld", [[feed postsToAddToDB] count]);
 	
 	NSArray *postsToAddToDB = [feed postsToAddToDB];
 	NSInteger numberOfUnread = 0;
@@ -2195,14 +2195,14 @@ static NSArray *preferencesToolbarItems;
 		[self processNewPosts:newPosts forFeed:feed];
 	}
 	
-	CLLog(@"syncing %@, found %qi new articles", [feed title], [newPosts count]);
+	CLLog(@"syncing %@, found %ld new articles", [feed title], [newPosts count]);
 }
 
 - (void)googleStarredOperation:(CLGoogleStarredOperation *)starredOperation addStarredItems:(NSArray *)items {
-	CLLog(@"adding %qi starred items", [items count]);
+	CLLog(@"adding %ld starred items", [items count]);
 	
 	for (CLPost *post in items) {
-		CLLog(@"adding %@ - %qi", [post guid], [post feedDbId]);
+		CLLog(@"adding %@ - %ld", [post guid], [post feedDbId]);
 		FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 		
 		if (![db open]) {
@@ -2233,7 +2233,7 @@ static NSArray *preferencesToolbarItems;
 }
 
 - (void)googleStarredOperation:(CLGoogleStarredOperation *)starredOperation removeStarredItems:(NSArray *)items {
-	CLLog(@"removing %qi starred items", [items count]);
+	CLLog(@"removing %ld starred items", [items count]);
 	
 	for (CLPost *post in items) {
 		CLLog(@"removing %@", [post guid]);
@@ -2552,7 +2552,7 @@ static NSArray *preferencesToolbarItems;
 - (void)markViewItemsAsUnreadForPostDbId:(NSInteger)postDbId {
 	if (postDbId > 0) {
 		
-		CLLog(@"markViewItemsAsUnreadForPostDbId %qi", postDbId);
+		CLLog(@"markViewItemsAsUnreadForPostDbId %ld", postDbId);
 		
 		for (CLWindowController *windowController in windowControllers) {
 			CLTabView *tabView = [windowController tabView];
@@ -2739,7 +2739,7 @@ static NSArray *preferencesToolbarItems;
 					[folderPath appendString:[parentFolder path]];
 				}
 				
-				[folderPath appendFormat:@"%qi/", insertId];
+				[folderPath appendFormat:@"%ld/", insertId];
 				
 				[db executeUpdate:@"UPDATE folder SET Path=? WHERE Id=?", folderPath, [NSNumber numberWithInteger:insertId]];
 				
@@ -3013,7 +3013,7 @@ static NSArray *preferencesToolbarItems;
 
 - (void)updateDockTile {
 	if (totalUnread > 0 && preferenceDisplayUnreadCountInDock) {
-		[[[NSApplication sharedApplication] dockTile] setBadgeLabel:[NSString stringWithFormat:@"%qu", totalUnread]];
+		[[[NSApplication sharedApplication] dockTile] setBadgeLabel:[NSString stringWithFormat:@"%lu", totalUnread]];
 	} else {
 		[[[NSApplication sharedApplication] dockTile] setBadgeLabel:nil];
 	}
@@ -3237,7 +3237,7 @@ static NSArray *preferencesToolbarItems;
 		[folderPath appendString:[parentFolder path]];
 	}
 	
-	[folderPath appendFormat:@"%qi/", insertId];
+	[folderPath appendFormat:@"%ld/", insertId];
 	
 	[db executeUpdate:@"UPDATE folder SET Path=? WHERE Id=?", folderPath, [NSNumber numberWithInteger:insertId]];
 	
@@ -3474,7 +3474,7 @@ static NSArray *preferencesToolbarItems;
 	[db close];
 	
 	if ([posts count] > 0) {
-		CLLog(@"marking %qi items as read", [posts count]);
+		CLLog(@"marking %ld items as read", [posts count]);
 		
 		for (NSDictionary *post in posts) {
 			[self markViewItemsAsReadForPostDbId:[[post objectForKey:@"Id"] integerValue]];
@@ -3788,7 +3788,7 @@ static NSArray *preferencesToolbarItems;
 			[newPath appendString:[folder path]];
 		}
 		
-		[newPath appendFormat:@"%qi/", [(CLSourceListFolder *)item dbId]];
+		[newPath appendFormat:@"%ld/", [(CLSourceListFolder *)item dbId]];
 		
 		NSString *query = [NSString stringWithFormat:@"UPDATE folder SET Path=REPLACE(Path, '%@', '%@') WHERE Path LIKE '%@%%'", oldPath, newPath, oldPath];
 		
