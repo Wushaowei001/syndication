@@ -74,15 +74,12 @@
 - (void)willSleep:(NSNotification *)notification {
 	if ([self isValid]) {
 		[self setSleepDate:[NSDate date]];
-	} else {
-		CLLog(@"sleep not valid");
 	}
 }
 
 - (void)didWake:(NSNotification *)notification {
 	if ([self isValid]) {
 		if (sleepDate == nil) {
-			CLLog(@"sleep date nil");
 			return;
 		}
 		
@@ -91,16 +88,10 @@
 		NSTimeInterval sleepLength = [wakeDate timeIntervalSinceDate:sleepDate];
 		NSTimeInterval adjustedTimeInterval = (timeInterval - (currentTime - startTime)) - sleepLength;
 		
-		//CLLog(@"wake time: %f", currentTime);
-		//CLLog(@"sleep length: %f", sleepLength);
-		//CLLog(@"adjusting timer to fire in %f seconds", adjustedTimeInterval);
-		
 		NSDate *fireDate = [NSDate dateWithTimeIntervalSinceNow:adjustedTimeInterval];
 		[timer setFireDate:fireDate];
 		
 		[self setSleepDate:nil];
-	} else {
-		CLLog(@"wake not valid");
 	}
 }
 
@@ -110,8 +101,6 @@
 		NSTimeInterval adjustedTimeInterval = timeInterval - (currentTime - startTime);
 		NSDate *fireDate = [NSDate dateWithTimeIntervalSinceNow:adjustedTimeInterval];
 		[timer setFireDate:fireDate];
-	} else {
-		CLLog(@"clock not valid");
 	}
 }
 

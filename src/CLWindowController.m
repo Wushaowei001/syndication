@@ -189,10 +189,6 @@
 			returnVal = [[self window] makeFirstResponder:[[tabViewItem webTab] webView]];
 		}
 	}
-	
-	if (returnVal == NO) {
-		CLLog(@"unsuccessful first responder update!");
-	}
 }
 
 - (void)keyDown:(NSEvent *)event {
@@ -377,12 +373,10 @@
 - (void)loadPostsIntoTimeline:(CLTimelineView *)timeline orClassicView:(CLClassicView *)classicView fromRange:(NSRange)range atBottom:(BOOL)bottom {
 	
 	if (timeline == nil && classicView == nil) {
-		CLLog(@"timeline == nil && classicView == nil");
 		return;
 	}
 	
 	if (range.length == 0) {
-		CLLog(@"range.length == 0");
 		return;
 	}
 	
@@ -398,15 +392,13 @@
 	NSString *searchQuery = [tabViewItem searchQuery];
 	
 	if (sourceListItem == nil && searchQuery == nil) {
-		CLLog(@"sourceListItem == nil && queryString == nil");
 		return;
 	}
 	
 	FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 	
 	if (![db open]) {
-		CLLog(@"failed to connect to database!");
-		return;
+		[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
 	}
 	
 	NSMutableString *dbQuery = [NSMutableString string];
@@ -439,7 +431,6 @@
 	} else if (sourceListItem == sourceListStarredItems) {
 		[dbQuery appendString:STARRED_QUERY];
 	} else {
-		CLLog(@"error: can't handle item");
 		return;
 	}
 	
@@ -484,8 +475,6 @@
 			[dbQuery appendFormat:@" LIMIT %ld, %ld", range.location, range.length];
 		}
 	}
-	
-	CLLog(@"%@", dbQuery);
 	
 	FMResultSet *rs = [db executeQuery:dbQuery];
 	NSMutableArray *posts = [NSMutableArray array];
@@ -549,7 +538,6 @@
 			
 			// if the query returned less posts than we asked for, it doesn't have any more left, so remember this
 			if ([posts count] < numPostsRequested) {
-				CLLog(@"no posts missing");
 				[timeline setPostsMissingFromBottom:NO];
 			}
 		}
@@ -826,14 +814,11 @@
 }
 
 - (void)changeWidthOfWindowBy:(NSInteger)change {
-	CLLog(@"change = %ld", change);
-	
 	if (change % 2) {
 		change++;
 	}
 	
 	NSRect oldFrame = [[self window] frame];
-	CLLog(@"oldFrame = %@", NSStringFromRect(oldFrame));
 	NSRect newFrame = NSMakeRect(oldFrame.origin.x - (NSInteger)(change / 2), oldFrame.origin.y, oldFrame.size.width + change, oldFrame.size.height);
 	NSRect maxFrame = [[NSScreen mainScreen] visibleFrame];
 	
@@ -854,7 +839,7 @@
 	if (actualChange >= 0) {
 		[self setLastWindowChange:actualChange];
 	}
-	CLLog(@"newFrame = %@", NSStringFromRect(newFrame));
+	
 	[[self window] setFrame:newFrame display:YES animate:YES];
 }
 
@@ -2208,8 +2193,6 @@
 			}
 			
 			[self loadPostsIntoTimeline:timelineView orClassicView:nil fromRange:range atBottom:NO];
-			
-			CLLog(@"loading more at top in range %@", NSStringFromRange(range));
 		}
 	}
 	
@@ -2243,8 +2226,6 @@
 			NSInteger numberOfPostsToRemove = numberOfPostsBeforeSelectedItem - threshold;
 			
 			if (numberOfPostsToRemove > 0) {
-				CLLog(@"removing %ld posts from top", numberOfPostsToRemove);
-				
 				[timelineView removePostsInRange:NSMakeRange(0, numberOfPostsToRemove) preserveScrollPosition:YES updateMetadata:YES];
 				[timelineView updateSubviewRects];
 				[timelineView setNeedsDisplay:YES];
@@ -2265,7 +2246,6 @@
 		
 		if (numberOfPostsToRemove > 0) {
 			NSRange range = NSMakeRange((numberOfPosts - numberOfPostsToRemove), numberOfPostsToRemove);
-			CLLog(@"removing posts from bottom in range %@", NSStringFromRange(range));
 			[timelineView removePostsInRange:range preserveScrollPosition:NO updateMetadata:YES];
 			[timelineView updateSubviewRects];
 			[timelineView setNeedsDisplay:YES];
@@ -2418,8 +2398,6 @@
 		return;
 	}
 	
-	CLLog(@"decidePolicy %@", urlString);
-	
 	if (tabType == CLTimelineType || tabType == CLClassicType) {
 		
 		if ([urlString length] > 51 && [urlScheme isEqual:@"applewebdata"]) {
@@ -2441,7 +2419,6 @@
 				[self classicView:classicView scrollToAnchor:[urlString substringFromIndex:1]];
 			}
 			
-			CLLog(@"ignore 1");
 			[listener ignore];
 			return;
 		}
@@ -2457,7 +2434,6 @@
 			}
 		}
 		
-		CLLog(@"ignore 2");
 		[listener ignore];
 		return;
 	}
@@ -2468,7 +2444,6 @@
 		// AFAIK, there is no apple-defined constants for these
 		if (mouseButton == 1) {
 			[self openNewWebTabWith:request selectTab:NO];
-			CLLog(@"ignore 3");
 			[listener ignore];
 			return;
 		} else {
@@ -2476,12 +2451,10 @@
 			
 			if (commandKeyIsDown) {
 				[self openNewWebTabWith:request selectTab:NO];
-				CLLog(@"ignore 4");
 				[listener ignore];
 				return;
 			} else if (tabType == CLTimelineType || tabType == CLClassicType) {
 				[self openNewWebTabWith:request selectTab:YES];
-				CLLog(@"ignore 5");
 				[listener ignore];
 				return;
 			}
@@ -2544,8 +2517,6 @@
 		// 204 is "Plug-in handled load", couldn't find constant for it
 		if ([error code] == 204) {
 			if (tabType == CLWebType) {
-				CLLog(@"plug-in handled load");
-				
 				[tabViewItem setIsLoading:NO];
 				
 				NSString *fileUrlString = [sender mainFrameURL];
@@ -2561,8 +2532,6 @@
 		}
 		
 		if ([error code] != NSURLErrorCancelled) {
-			CLLog(@"didFailLoadWithError (%ld): %@", [error code], [error localizedDescription]);
-			
 			if (tabType == CLWebType) {
 				[tabViewItem setIsLoading:NO];
 				[tabView setNeedsDisplay:YES];
@@ -2580,8 +2549,6 @@
 	
 	if (frame == [sender mainFrame]) {
 		if ([error code] != NSURLErrorCancelled) {
-			CLLog(@"didFailProvisionalLoadWithError (%ld): %@", [error code], [error localizedDescription]);
-			
 			if (tabType == CLWebType) {
 				[tabViewItem setIsLoading:NO];
 				[tabView setNeedsDisplay:YES];
@@ -2687,7 +2654,6 @@
 }
 
 - (WebView *)webView:(CLWebView *)sender createWebViewWithRequest:(NSURLRequest *)request {
-	CLLog(@"createWebViewWithRequest");
 	return [self openNewWebTabWith:request selectTab:YES];
 }
 

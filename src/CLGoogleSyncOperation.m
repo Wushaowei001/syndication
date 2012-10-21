@@ -148,8 +148,6 @@
 						}
 						
 						if (title != nil && (dbTitle == nil || [title isEqual:dbTitle] == NO)) {
-							CLLog(@"changing title for %@ to %@", readerFeed, title);
-							
 							NSMutableDictionary *params = [NSMutableDictionary dictionary];
 							[params setValue:title forKey:@"title"];
 							[params setValue:readerFeed forKey:@"urlString"];
@@ -185,8 +183,6 @@
 						if ([feedUnreadCountDictionary objectForKey:feedUrlString] != nil) {
 							feedUnreadCount = [[feedUnreadCountDictionary objectForKey:feedUrlString] integerValue];
 						}
-						
-						CLLog(@"queueing %@", feedUrlString);
 						
 						NSMutableDictionary *params = [NSMutableDictionary dictionary];
 						[params setValue:feedUrlString forKey:@"urlString"];
@@ -231,8 +227,7 @@
 	FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 	
 	if (![db open]) {
-		CLLog(@"failed to connect to database!");
-		return;
+		[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
 	}
 	
 	FMResultSet *rs = [db executeQuery:@"SELECT * FROM feed WHERE IsFromGoogle=1 AND IsHidden=0"];
@@ -259,7 +254,7 @@
 
 - (void)dispatchDeleteFeedDelegateMessage:(NSString *)urlString {
 	if ([NSThread isMainThread] == NO) {
-		CLLog(@"oops, this code should only be run from the main thread!!");
+		[NSException raise:@"Thread error" format:@"This function should only be called from the main thread!"];
 	}
 	
 	[[self delegate] googleSyncOperation:self deleteFeedWithUrlString:urlString];
@@ -267,7 +262,7 @@
 
 - (void)dispatchAddFeedDelegateMessage:(NSDictionary *)params {
 	if ([NSThread isMainThread] == NO) {
-		CLLog(@"oops, this code should only be run from the main thread!!");
+		[NSException raise:@"Thread error" format:@"This function should only be called from the main thread!"];
 	}
 	
 	NSString *urlString = [params objectForKey:@"urlString"];
@@ -279,7 +274,7 @@
 
 - (void)dispatchFoundTitleDelegateMessage:(NSDictionary *)params {
 	if ([NSThread isMainThread] == NO) {
-		CLLog(@"oops, this code should only be run from the main thread!!");
+		[NSException raise:@"Thread error" format:@"This function should only be called from the main thread!"];
 	}
 	
 	NSString *title = [params objectForKey:@"title"];
@@ -290,7 +285,7 @@
 
 - (void)dispatchFoundFolderDelegateMessage:(NSDictionary *)params {
 	if ([NSThread isMainThread] == NO) {
-		CLLog(@"oops, this code should only be run from the main thread!!");
+		[NSException raise:@"Thread error" format:@"This function should only be called from the main thread!"];
 	}
 	
 	NSString *folder = [params objectForKey:@"folderTitle"];
@@ -301,7 +296,7 @@
 
 - (void)dispatchQueueFeedDelegateMessage:(NSDictionary *)params {
 	if ([NSThread isMainThread] == NO) {
-		CLLog(@"oops, this code should only be run from the main thread!!");
+		[NSException raise:@"Thread error" format:@"This function should only be called from the main thread!"];
 	}
 	
 	NSString *urlString = [params objectForKey:@"urlString"];

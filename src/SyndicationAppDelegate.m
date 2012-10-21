@@ -221,8 +221,7 @@ static NSArray *preferencesToolbarItems;
 	FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 	
 	if (![db open]) {
-		CLLog(@"failed to connect to database!");
-		return nil;
+		[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
 	}
 	
 	FMResultSet *rs = [db executeQuery:@"SELECT * FROM miscellaneous WHERE Key=?", key];
@@ -252,8 +251,7 @@ static NSArray *preferencesToolbarItems;
 	FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 	
 	if (![db open]) {
-		CLLog(@"failed to connect to database!");
-		return;
+		[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
 	}
 	
 	if (alreadyInDB) {
@@ -398,9 +396,11 @@ static NSArray *preferencesToolbarItems;
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
 	
+#ifndef NDEBUG
 	if (getenv("NSZombieEnabled") || getenv("NSAutoreleaseFreedObjectCheckEnabled")) {
-		CLLog(@"NSZombieEnabled!");
+		[CLErrorHelper createAndDisplayError:@"NSZombieEnabled"];
 	}
+#endif
     
 	[self loadFromDatabase];
 	[self sortSourceList];
@@ -441,11 +441,8 @@ static NSArray *preferencesToolbarItems;
 	}
 	
 	[CLTimer scheduledTimerWithTimeInterval:(TIME_INTERVAL_MINUTE * 10) target:self selector:@selector(queueDeleteHiddenRequest) userInfo:nil repeats:YES];
-	
 	[CLTimer scheduledTimerWithTimeInterval:(TIME_INTERVAL_MINUTE * 75) target:self selector:@selector(removeOldArticles) userInfo:nil repeats:YES];
-	
 	[CLTimer scheduledTimerWithTimeInterval:(TIME_INTERVAL_MINUTE * 80) target:self selector:@selector(markArticlesAsRead) userInfo:nil repeats:YES];
-	
 	[CLTimer scheduledTimerWithTimeInterval:30 target:self selector:@selector(startFeedRequests) userInfo:nil repeats:YES];
 	[CLTimer scheduledTimerWithTimeInterval:30 target:self selector:@selector(startRequestIfNoneInProgress) userInfo:nil repeats:YES];
 	
@@ -479,8 +476,7 @@ static NSArray *preferencesToolbarItems;
 	FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 	
 	if (![db open]) {
-		[CLErrorHelper createAndDisplayError:@"Failed to connect to database!"];
-		return;
+		[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
 	}
 	
 	[self setSubscriptionList:[NSMutableArray array]];
@@ -788,21 +784,10 @@ static NSArray *preferencesToolbarItems;
 }
 
 - (void)startRequestIfNoneInProgress {
-	CLLog(@"startRequestIfNoneInProgress");
-	CLLog(@"requestInProgress: %@", requestInProgress ? @"YES" : @"NO");
-    CLLog(@"activeRequestType: %ld", activeRequestType);
-    
-    for (CLRequest *request in requestQueue) {
-        CLLog(@"request type: %ld", [request requestType]);
-    }
-    
     if ([feedRequests count] == 0 && [feedsToSync count] == 0 && [operationQueue operationCount] == 0 && [googleOperationQueue operationCount] == 0) {
         [self setRequestInProgress:NO];
         [self setNumberOfActiveParseOps:0];
     }
-    
-    CLLog(@"requestInProgress: %@", requestInProgress ? @"YES" : @"NO");
-    CLLog(@"------");
     
 	while (requestInProgress == NO && [requestQueue count] > 0) {
 		
@@ -810,9 +795,6 @@ static NSArray *preferencesToolbarItems;
 		[requestQueue removeObjectAtIndex:0];
 		
 		if ([request requestType] == CLRequestNonGoogleSync) {
-			
-			CLLog(@"starting non google request");
-			
 			NSInteger timestamp = (NSInteger)[[NSDate date] timeIntervalSince1970];
 			NSString *timestampString = [[NSNumber numberWithInteger:timestamp] stringValue];
 			[SyndicationAppDelegate miscellaneousSetValue:timestampString forKey:MISCELLANEOUS_LAST_FEED_SYNC_KEY];
@@ -825,13 +807,9 @@ static NSArray *preferencesToolbarItems;
 				
 				[self setRequestInProgress:YES];
 				[self setActiveRequestType:[request requestType]];
-			} else {
-				CLLog(@"no non-google feeds");
 			}
 			
 		} else if ([request requestType] == CLRequestGoogleSync) {
-			
-			CLLog(@"starting google request");
 			
 			[self queueGoogleSyncOperation];
 			
@@ -840,16 +818,12 @@ static NSArray *preferencesToolbarItems;
 			
 		} else if ([request requestType] == CLRequestGoogleStarredSync) {
 			
-			CLLog(@"starting google starred request");
-			
 			[self queueGoogleStarredOperation];
 			
 			[self setRequestInProgress:YES];
 			[self setActiveRequestType:[request requestType]];
 			
 		} else if ([request requestType] == CLRequestSpecificFeedsSync) {
-			
-			CLLog(@"starting specific feeds request");
 			
 			[feedsToSync addObjectsFromArray:[request specificFeeds]];
 			[self startFeedRequests];
@@ -858,16 +832,13 @@ static NSArray *preferencesToolbarItems;
 			[self setActiveRequestType:[request requestType]];
 			
 		} else if ([request requestType] == CLRequestGoogleSingleFeedSync) {
-		
-			CLLog(@"starting google single feed sync");
 			
 			NSInteger dbNewestItemTimestamp = 0;
 			
 			FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 			
 			if (![db open]) {
-				CLLog(@"failed to connect to database!");
-				return;
+				[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
 			}
 			
 			FMResultSet *rs = [db executeQuery:@"SELECT GoogleNewestItemTimestamp FROM feed WHERE Id=?", [NSNumber numberWithInteger:[[request singleFeed] dbId]]];
@@ -886,8 +857,6 @@ static NSArray *preferencesToolbarItems;
 			
 		} else if ([request requestType] == CLRequestDeleteHidden) {
 			
-			CLLog(@"starting delete hidden request");
-			
 			[self queueDeleteHiddenOperation];
 			
 			[self setRequestInProgress:YES];
@@ -902,17 +871,6 @@ static NSArray *preferencesToolbarItems;
 }
 
 - (void)startFeedRequests {
-	CLLog(@"startFeedRequests");
-    CLLog(@"feedsToSync: %ld", [feedsToSync count]);
-    
-    for (CLFeedRequest *feedRequest in feedRequests) {
-        CLLog(@"feed request: %@", [[feedRequest feed] extractTitleForDisplay]);
-    }
-    
-	CLLog(@"numberOfActiveParseOps: %ld", numberOfActiveParseOps);
-    CLLog(@"operationQueue: %ld", [operationQueue operationCount]);
-    CLLog(@"googleOperationQueue: %ld", [googleOperationQueue operationCount]);
-	
 	while ([feedsToSync count] > 0 && ([feedRequests count] + numberOfActiveParseOps) < MAX_CONCURRENT_REQUESTS) {
 		
 		CLSourceListFeed *feed = [feedsToSync objectAtIndex:0];
@@ -929,22 +887,10 @@ static NSArray *preferencesToolbarItems;
 		[feedRequest release];
 		
 		[feedRequest startConnection];
-		
-		CLLog(@"starting feed request for %@", [feed extractTitleForDisplay]);
 	}
-	
-	CLLog(@"feedsToSync: %ld", [feedsToSync count]);
-    
-    for (CLFeedRequest *feedRequest in feedRequests) {
-        CLLog(@"feed request: %@", [[feedRequest feed] extractTitleForDisplay]);
-    }
-    
-	CLLog(@"numberOfActiveParseOps: %ld", numberOfActiveParseOps);
 }
 
 - (void)feedRequest:(CLFeedRequest *)feedRequest didFinishWithData:(NSData *)data encoding:(NSStringEncoding)encoding {
-	CLLog(@"didFinishWithData");
-	
 	[[feedRequest retain] autorelease];
 	[feedRequests removeObject:feedRequest];
 	
@@ -993,7 +939,6 @@ static NSArray *preferencesToolbarItems;
 }
 
 - (void)queueGoogleSyncOperation {
-	CLLog(@"queueing google sync...");
 	CLGoogleSyncOperation *syncOp = [[CLGoogleSyncOperation alloc] init];
 	[syncOp setDelegate:self];
 	[syncOp setGoogleAuth:googleAuth];
@@ -1003,7 +948,6 @@ static NSArray *preferencesToolbarItems;
 }
 
 - (void)queueGoogleFeedOperationFor:(CLSourceListFeed *)feed timestamp:(NSInteger)timestamp unreadCount:(NSInteger)unreadCount {
-	CLLog(@"queueGoogleFeedOperationFor: %@", [feed extractTitleForDisplay]);
 	CLGoogleFeedOperation *feedOp = [[CLGoogleFeedOperation alloc] init];
 	[feedOp setDelegate:self];
 	[feedOp setFeed:feed];
@@ -1065,8 +1009,7 @@ static NSArray *preferencesToolbarItems;
 	FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 	
 	if (![db open]) {
-		CLLog(@"failed to connect to database!");
-		return;
+		[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
 	}
 	
 	[db executeUpdate:@"DELETE FROM googleOperations WHERE Type=? AND GoogleUrl=?", [NSNumber numberWithInteger:CLFeedTitleType], googleUrl];
@@ -1193,8 +1136,7 @@ static NSArray *preferencesToolbarItems;
 	FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 	
 	if (![db open]) {
-		[CLErrorHelper createAndDisplayError:@"Failed to connect to database!"];
-		return;
+		[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
 	}
 	
 	if ([googleOp isKindOfClass:[CLGoogleAddFeedOperation class]]) {
@@ -1222,7 +1164,6 @@ static NSArray *preferencesToolbarItems;
 		CLGoogleRemoveStarOperation *removeStarOp = (CLGoogleRemoveStarOperation *)googleOp;
 		[db executeUpdate:@"INSERT INTO googleOperations (Type, GoogleUrl, Guid) VALUES (?, ?, ?)", [NSNumber numberWithInteger:CLRemoveStarType], [removeStarOp feedGoogleUrl], [removeStarOp itemGuid]];
 	} else {
-		CLLog(@"unable to add item to db!");
 		[db close];
 		return;
 	}
@@ -1234,8 +1175,7 @@ static NSArray *preferencesToolbarItems;
 	FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 	
 	if (![db open]) {
-		[CLErrorHelper createAndDisplayError:@"Failed to connect to database!"];
-		return;
+		[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
 	}
 	
 	if ([googleOp isKindOfClass:[CLGoogleAddFeedOperation class]]) {
@@ -1263,7 +1203,6 @@ static NSArray *preferencesToolbarItems;
 		CLGoogleRemoveStarOperation *removeStarOp = (CLGoogleRemoveStarOperation *)googleOp;
 		[db executeUpdate:@"DELETE FROM googleOperations WHERE Type=? AND GoogleUrl=? AND Guid=?", [NSNumber numberWithInteger:CLRemoveStarType], [removeStarOp feedGoogleUrl], [removeStarOp itemGuid]];
 	} else {
-		CLLog(@"unable to remove item from db!");
 		[db close];
 		return;
 	}
@@ -1275,8 +1214,7 @@ static NSArray *preferencesToolbarItems;
 	FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 	
 	if (![db open]) {
-		CLLog(@"failed to connect to database!");
-		return;
+		[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
 	}
 	
 	FMResultSet *rs = [db executeQuery:@"SELECT * FROM googleOperations"];
@@ -1291,8 +1229,6 @@ static NSArray *preferencesToolbarItems;
 		NSString *title = [rs stringForColumn:@"Title"];
 		NSString *guid = [rs stringForColumn:@"Guid"];
 		NSString *folder = [rs stringForColumn:@"Folder"];
-		
-		CLLog(@"requeueing op of type %ld url %@", opType, googleUrl);
 		
 		if (opType == CLAddFeedType) {
 			[self queueGoogleAddFeedForGoogleUrl:googleUrl addToDb:NO];
@@ -1310,8 +1246,6 @@ static NSArray *preferencesToolbarItems;
 			[self queueGoogleAddStarOperationForGoogleUrl:googleUrl itemGuid:guid addToDb:NO];
 		} else if (opType == CLRemoveStarType) {
 			[self queueGoogleRemoveStarOperationForGoogleUrl:googleUrl itemGuid:guid addToDb:NO];
-		} else {
-			CLLog(@"unable to requeue item");
 		}
 	}
 	
@@ -1409,8 +1343,7 @@ static NSArray *preferencesToolbarItems;
 				FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 				
 				if (![db open]) {
-					CLLog(@"failed to connect to database!");
-					return;
+					[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
 				}
 				
 				[db executeUpdate:@"DELETE FROM googleOperations WHERE GoogleUrl=?", [feed googleUrl]];
@@ -1497,8 +1430,7 @@ static NSArray *preferencesToolbarItems;
 	FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 	
 	if (![db open]) {
-		CLLog(@"failed to connect to database!");
-		return;
+		[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
 	}
 	
 	if (activityType == CLAddToFolderType) {
@@ -1522,8 +1454,7 @@ static NSArray *preferencesToolbarItems;
 		FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 		
 		if (![db open]) {
-			CLLog(@"failed to connect to database!");
-			return;
+			[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
 		}
 		
 		BOOL feedStillExistsInDatabase = NO;
@@ -1544,8 +1475,7 @@ static NSArray *preferencesToolbarItems;
 			db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 			
 			if (![db open]) {
-				CLLog(@"failed to connect to database!");
-				return;
+				[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
 			}
 			
 			NSDate *now;
@@ -1863,8 +1793,6 @@ static NSArray *preferencesToolbarItems;
 }
 
 - (void)didStartOperation:(CLOperation *)op {
-	CLLog(@"didStartOperation");
-	
 	if ([op isKindOfClass:[CLGoogleFeedOperation class]]) {
 		[activityViewGoogleFeeds addObject:[(CLGoogleFeedOperation *)op feed]];
 		[self refreshAllActivityViews];
@@ -1872,8 +1800,6 @@ static NSArray *preferencesToolbarItems;
 }
 
 - (void)didFinishOperation:(CLOperation *)op {
-	CLLog(@"didFinishOperation");
-	
 	if ([op isKindOfClass:[CLFeedParserOperation class]]) {
 		
 		[activityViewFeeds removeObject:[(CLFeedParserOperation *)op feed]];
@@ -1937,9 +1863,6 @@ static NSArray *preferencesToolbarItems;
 }
 
 - (void)feedParserOperationFoundNewPostsForFeed:(CLSourceListFeed *)feed {
-	
-	CLLog(@"new posts: %ld", [[feed postsToAddToDB] count]);
-	
 	NSArray *postsToAddToDB = [feed postsToAddToDB];
 	NSInteger numberOfUnread = 0;
 	
@@ -1973,8 +1896,7 @@ static NSArray *preferencesToolbarItems;
 	FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 	
 	if (![db open]) {
-		CLLog(@"failed to connect to database!");
-		return;
+		[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
 	}
 	
 	if ([feed icon] != nil) {
@@ -2002,8 +1924,6 @@ static NSArray *preferencesToolbarItems;
 		[windowController redrawSourceListItem:feed];
 		[[windowController activityView] setNeedsDisplay:YES];
 	}
-	
-	CLLog(@"finished refreshing icon for %@", [feed title]);
 	
 	[self markIconAsRefreshedAndStartTimer:feed];
 }
@@ -2115,10 +2035,7 @@ static NSArray *preferencesToolbarItems;
 }
 
 - (void)googleSyncOperation:(CLGoogleSyncOperation *)syncOp foundFolder:(NSString *)folderString forUrlString:(NSString *)urlString {
-	CLLog(@"found folder %@ for feed %@", folderString, urlString);
-	
 	CLSourceListFeed *feed = [self feedForUrlString:urlString isFromGoogle:YES];
-	
 	[self makeSureGoogleFeed:feed isInFolderWithTitle:folderString];
 }
 
@@ -2160,10 +2077,7 @@ static NSArray *preferencesToolbarItems;
 	CLSourceListFeed *feed = [self feedForUrlString:urlString isFromGoogle:YES];
 	
 	if (feed != nil) {
-		CLLog(@"found feed for %@", urlString);
 		[self queueGoogleFeedOperationFor:feed timestamp:timestamp unreadCount:unreadCount];
-	} else {
-		CLLog(@"couldn't find feed for %@", urlString);
 	}
 }
 
@@ -2205,20 +2119,14 @@ static NSArray *preferencesToolbarItems;
 		
 		[self processNewPosts:newPosts forFeed:feed];
 	}
-	
-	CLLog(@"syncing %@, found %ld new articles", [feed title], [newPosts count]);
 }
 
 - (void)googleStarredOperation:(CLGoogleStarredOperation *)starredOperation addStarredItems:(NSArray *)items {
-	CLLog(@"adding %ld starred items", [items count]);
-	
 	for (CLPost *post in items) {
-		CLLog(@"adding %@ - %ld", [post guid], [post feedDbId]);
 		FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 		
 		if (![db open]) {
-			CLLog(@"failed to connect to database!");
-			return;
+			[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
 		}
 		
 		FMResultSet *rs = [db executeQuery:@"SELECT * FROM post WHERE Guid=? AND FeedId=?", [post guid], [NSNumber numberWithInteger:[post feedDbId]]];
@@ -2244,11 +2152,7 @@ static NSArray *preferencesToolbarItems;
 }
 
 - (void)googleStarredOperation:(CLGoogleStarredOperation *)starredOperation removeStarredItems:(NSArray *)items {
-	CLLog(@"removing %ld starred items", [items count]);
-	
 	for (CLPost *post in items) {
-		CLLog(@"removing %@", [post guid]);
-		
 		[self removeStarFromPost:post propagateChangesToGoogle:NO];
 	}
 }
@@ -2267,8 +2171,7 @@ static NSArray *preferencesToolbarItems;
 	FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 	
 	if (![db open]) {
-		CLLog(@"failed to connect to database!");
-		return 0;
+		[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
 	}
 	
 	FMResultSet *rs;
@@ -2381,8 +2284,7 @@ static NSArray *preferencesToolbarItems;
 	FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 	
 	if (![db open]) {
-		CLLog(@"failed to connect to database!");
-		return;
+		[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
 	}
 	
 	FMResultSet *rs = [db executeQuery:@"SELECT * FROM post WHERE Id=?", [NSNumber numberWithInteger:dbId]];
@@ -2415,8 +2317,7 @@ static NSArray *preferencesToolbarItems;
 	db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 	
 	if (![db open]) {
-		CLLog(@"failed to connect to database!");
-		return;
+		[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
 	}
 	
 	[db beginTransaction];
@@ -2439,8 +2340,7 @@ static NSArray *preferencesToolbarItems;
 		db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 		
 		if (![db open]) {
-			CLLog(@"failed to connect to database!");
-			return;
+			[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
 		}
 		
 		NSString *googleUrl = nil;
@@ -2466,8 +2366,7 @@ static NSArray *preferencesToolbarItems;
 	FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 	
 	if (![db open]) {
-		CLLog(@"failed to connect to database!");
-		return;
+		[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
 	}
 	
 	FMResultSet *rs = [db executeQuery:@"SELECT * FROM post WHERE Id=?", [NSNumber numberWithInteger:dbId]];
@@ -2501,8 +2400,7 @@ static NSArray *preferencesToolbarItems;
 	db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 	
 	if (![db open]) {
-		CLLog(@"failed to connect to database!");
-		return;
+		[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
 	}
 	
 	[db beginTransaction];
@@ -2562,9 +2460,6 @@ static NSArray *preferencesToolbarItems;
 // it is only used when an item arrives from google that is read in the db but unread in google
 - (void)markViewItemsAsUnreadForPostDbId:(NSInteger)postDbId {
 	if (postDbId > 0) {
-		
-		CLLog(@"markViewItemsAsUnreadForPostDbId %ld", postDbId);
-		
 		for (CLWindowController *windowController in windowControllers) {
 			CLTabView *tabView = [windowController tabView];
 			
@@ -2707,8 +2602,7 @@ static NSArray *preferencesToolbarItems;
 	FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 	
 	if (![db open]) {
-		CLLog(@"failed to connect to database!");
-		return;
+		[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
 	}
 	
 	while ([stack count] > 0) {
@@ -2909,8 +2803,7 @@ static NSArray *preferencesToolbarItems;
 			FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 			
 			if (![db open]) {
-				CLLog(@"failed to connect to database!");
-				return;
+				[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
 			}
 			
 			FMResultSet *rs = [db executeQuery:@"SELECT Title FROM folder WHERE Id=?", [NSNumber numberWithInteger:[folder dbId]]];
@@ -2959,8 +2852,7 @@ static NSArray *preferencesToolbarItems;
 	FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 	
 	if (![db open]) {
-		CLLog(@"failed to connect to database!");
-		return;
+		[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
 	}
 	
 	if ([item isKindOfClass:[CLSourceListFeed class]]) {
@@ -3096,8 +2988,7 @@ static NSArray *preferencesToolbarItems;
 	FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 	
 	if (![db open]) {
-		CLLog(@"failed to connect to database!");
-		return nil;
+		[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
 	}
 	
 	FMResultSet *rs = [db executeQuery:@"SELECT post.*, feed.Title AS FeedTitle, feed.Url AS FeedUrlString FROM post, feed WHERE post.FeedId=feed.Id AND post.Id=?", [NSNumber numberWithInteger:dbId]];
@@ -3127,8 +3018,7 @@ static NSArray *preferencesToolbarItems;
 	FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 	
 	if (![db open]) {
-		CLLog(@"failed to connect to database!");
-		return 0;
+		[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
 	}
 	
 	NSString *regularUrl = nil;
@@ -3229,8 +3119,7 @@ static NSArray *preferencesToolbarItems;
 	FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 	
 	if (![db open]) {
-		CLLog(@"failed to connect to database!");
-		return 0;
+		[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
 	}
 	
 	NSNumber *parentId = nil;
@@ -3295,15 +3184,13 @@ static NSArray *preferencesToolbarItems;
 - (void)deleteSourceListItem:(CLSourceListItem *)item propagateChangesToGoogle:(BOOL)propagate {
 	
 	if (item == nil) {
-		CLLog(@"item nil!");
 		return;
 	}
 	
 	FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 	
 	if (![db open]) {
-		CLLog(@"failed to connect to database!");
-		return;
+		[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
 	}
 	
 	[db beginTransaction];
@@ -3445,15 +3332,13 @@ static NSArray *preferencesToolbarItems;
 - (void)markAllAsReadForSourceListItem:(CLSourceListItem *)item orNewItems:(BOOL)newItems orStarredItems:(BOOL)starredItems orPostsOlderThan:(NSNumber *)timestamp {
 	
 	if (item == nil && newItems == NO && starredItems == NO && timestamp == nil) {
-		CLLog(@"item == nil && newItems == NO && starredItems == NO && timestamp == nil");
 		return;
 	}
 	
 	FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 	
 	if (![db open]) {
-		CLLog(@"failed to connect to database!");
-		return;
+		[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
 	}
 	
 	NSMutableArray *posts = [NSMutableArray array];
@@ -3485,8 +3370,6 @@ static NSArray *preferencesToolbarItems;
 	[db close];
 	
 	if ([posts count] > 0) {
-		CLLog(@"marking %ld items as read", [posts count]);
-		
 		for (NSDictionary *post in posts) {
 			[self markViewItemsAsReadForPostDbId:[[post objectForKey:@"Id"] integerValue]];
 			
@@ -3498,8 +3381,7 @@ static NSArray *preferencesToolbarItems;
 		db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 		
 		if (![db open]) {
-			CLLog(@"failed to connect to database!");
-			return;
+			[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
 		}
 		
 		BOOL doManualUpdate = NO;
@@ -3626,7 +3508,6 @@ static NSArray *preferencesToolbarItems;
 - (void)refreshSourceListItem:(CLSourceListItem *)item onlyGoogle:(BOOL)onlyGoogle {
 	
 	if (item == nil) {
-		CLLog(@"item nil!");
 		return;
 	}
 	
@@ -3678,8 +3559,7 @@ static NSArray *preferencesToolbarItems;
 		FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 		
 		if (![db open]) {
-			CLLog(@"failed to connect to database!");
-			return;
+			[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
 		}
 		
 		FMResultSet *rs = [db executeQuery:@"SELECT Id FROM post WHERE IsHidden=0 AND Received < ? AND IsStarred=0", [NSNumber numberWithInteger:olderThan]];
@@ -3743,8 +3623,7 @@ static NSArray *preferencesToolbarItems;
 		db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 		
 		if (![db open]) {
-			CLLog(@"failed to connect to database!");
-			return;
+			[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
 		}
 		
 		[db executeUpdate:@"UPDATE post SET IsHidden=1 WHERE Received < ? AND IsStarred=0", [NSNumber numberWithInteger:olderThan]];
@@ -3776,8 +3655,7 @@ static NSArray *preferencesToolbarItems;
 	FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 	
 	if (![db open]) {
-		CLLog(@"failed to connect to database!");
-		return;
+		[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
 	}
 	
 	NSNumber *folderId = nil;
@@ -3879,8 +3757,7 @@ static NSArray *preferencesToolbarItems;
 	FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 	
 	if (![db open]) {
-		CLLog(@"failed to connect to database!");
-		return;
+		[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
 	}
 	
 	[db executeUpdate:@"UPDATE post SET IsStarred=1 WHERE Id=?", [NSNumber numberWithInteger:[post dbId]]];
@@ -3905,7 +3782,6 @@ static NSArray *preferencesToolbarItems;
 - (void)removeStarFromPost:(CLPost *)post propagateChangesToGoogle:(BOOL)propagate {
 	
 	if ([post dbId] <= 0 || [post feedDbId] <= 0) {
-		CLLog(@"([post dbId] <= 0 || [post feedDbId <= 0)");
 		return;
 	}
 	
@@ -3918,8 +3794,7 @@ static NSArray *preferencesToolbarItems;
 	FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 	
 	if (![db open]) {
-		CLLog(@"failed to connect to database!");
-		return;
+		[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
 	}
 	
 	FMResultSet *rs = [db executeQuery:@"SELECT * FROM feed WHERE Id=?", [NSNumber numberWithInteger:[post feedDbId]]];
@@ -4587,20 +4462,10 @@ static NSArray *preferencesToolbarItems;
 	BOOL changedAccounts = ((email != nil && previousEmail == nil) || (email == nil && previousEmail != nil) || (email != nil && previousEmail != nil && [email isEqual:previousEmail] == NO));
 	
 	if (changedAccounts) {
-		
-		CLLog(@"changed accounts");
-		
 		FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 		
 		if (![db open]) {
-			CLLog(@"failed to connect to database!");
-			
-			if (showingWelcomeWindow) {
-				[welcomeWindow center];
-				[welcomeWindow makeKeyAndOrderFront:self];
-			}
-			
-			return;
+			[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
 		}
 		
 		FMResultSet *rs = [db executeQuery:@"SELECT * FROM feed WHERE IsFromGoogle=1"];
@@ -4624,8 +4489,7 @@ static NSArray *preferencesToolbarItems;
 		db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 		
 		if (![db open]) {
-			CLLog(@"failed to connect to database!");
-			return;
+			[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
 		}
 		
 		[db executeUpdate:@"DELETE FROM googleOperations"];
@@ -5436,9 +5300,6 @@ static NSArray *preferencesToolbarItems;
 #pragma mark feed:// urls
 
 - (void)handleFeedEvent:(NSAppleEventDescriptor *)event withReplyEvent:(NSAppleEventDescriptor *)replyEvent {
-	
-	CLLog(@"handleFeedEvent");
-	
 	NSString *urlStr = [[event paramDescriptorForKeyword:keyDirectObject] stringValue];
 	
 	if ([[urlStr substringToIndex:7] isEqual:@"feed://"]) {

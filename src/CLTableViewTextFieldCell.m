@@ -39,7 +39,6 @@ static NSImage *unreadDot;
 	CLPost *post = [delegate tableViewTextFieldCell:self postForRow:rowIndex];
 	
 	if (post == nil) {
-		CLLog(@"post nil!");
 		return;
 	}
 	

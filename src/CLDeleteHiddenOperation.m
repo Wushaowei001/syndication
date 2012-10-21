@@ -43,10 +43,7 @@ static NSInteger modulo;
 		FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 		
 		if (![db open]) {
-			CLLog(@"failed to connect to database!");
-			[self performSelectorOnMainThread:@selector(dispatchDidFinishDelegateMessage) withObject:nil waitUntilDone:YES];
-			[pool drain];
-			return;
+			[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
 		}
 		
 		[db beginTransaction];
@@ -115,11 +112,8 @@ static NSInteger modulo;
 				}
 				
 				if ([hiddenPosts count] > 0) {
-					
 					for (CLPost *hiddenPost in hiddenPosts) {
 						if ([hiddenPost dbId] > 0) {
-							CLLog(@"deleting hidden post with dbid = %ld", [hiddenPost dbId]);
-							
 							[db executeUpdate:@"DELETE FROM enclosure WHERE PostId=?", [NSNumber numberWithInteger:[hiddenPost dbId]]];
 							[db executeUpdate:@"DELETE FROM post WHERE Id=?", [NSNumber numberWithInteger:[hiddenPost dbId]]];
 						}

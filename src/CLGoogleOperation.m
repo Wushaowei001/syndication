@@ -110,15 +110,6 @@
 		NSString *googlePassword = [CLKeychainHelper getPasswordForAccount:googleEmail];
 		
 		if (googleEmail == nil || [googleEmail length] == 0 || googlePassword == nil || [googlePassword length] == 0) {
-			
-			if (googleEmail == nil || [googleEmail length] == 0) {
-				CLLog(@"missing email");
-			}
-			
-			if (googlePassword == nil || [googlePassword length] == 0) {
-				CLLog(@"missing pass");
-			}
-			
 			[self performSelectorOnMainThread:@selector(dispatchAuthErrorDelegateMessage:) withObject:nil waitUntilDone:YES];
 			// note that there is intentionally no call to completeOperation here (so this operation can be restarted later)
 			return NO;
@@ -134,7 +125,6 @@
 			[self setGoogleAuth:[responseDict objectForKey:@"Auth"]];
 			[self performSelectorOnMainThread:@selector(dispatchAuthDelegateMessage) withObject:nil waitUntilDone:YES];
 		} else {
-			CLLog(@"login failure");
 			[self performSelectorOnMainThread:@selector(dispatchAuthErrorDelegateMessage:) withObject:responseDict waitUntilDone:YES];
 			// note that there is intentionally no call to completeOperation here (so this operation can be restarted later)
 			return NO;
@@ -315,7 +305,7 @@
 
 - (void)dispatchAuthDelegateMessage {
 	if ([NSThread isMainThread] == NO) {
-		CLLog(@"oops, this code should only be run from the main thread!!");
+		[NSException raise:@"Thread error" format:@"This function should only be called from the main thread!"];
 	}
 	
 	[[self delegate] googleOperation:self foundAuthToken:googleAuth];
@@ -323,7 +313,7 @@
 
 - (void)dispatchAuthErrorDelegateMessage:(NSDictionary *)authError {
 	if ([NSThread isMainThread] == NO) {
-		CLLog(@"oops, this code should only be run from the main thread!!");
+		[NSException raise:@"Thread error" format:@"This function should only be called from the main thread!"];
 	}
 	
 	[[self delegate] googleOperation:self handleAuthError:authError];

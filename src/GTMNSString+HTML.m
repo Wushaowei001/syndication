@@ -390,7 +390,6 @@ static int EscapeMapCompare(const void *ucharVoid, const void *mapVoid) {
 		NSMutableData *data = [NSMutableData dataWithLength:length * sizeof(UniChar)];
 		if (!data) {
 			// COV_NF_START  - Memory fail case
-			//CLLog(@"couldn't alloc buffer");
 			return nil;
 			// COV_NF_END
 		}

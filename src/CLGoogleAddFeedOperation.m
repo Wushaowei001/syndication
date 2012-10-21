@@ -27,8 +27,6 @@
 		
 		NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 		
-		CLLog(@"adding feed %@...", feedGoogleUrl);
-		
 		if (feedGoogleUrl == nil || [feedGoogleUrl length] == 0) {
 			[self completeOperation];
 			[pool drain];
@@ -68,8 +66,6 @@
 			
 			[self addSubscriptionForUrlString:feedGoogleUrl token:token auth:googleAuth statusCode:&statusCode];
 		}
-		
-		CLLog(@"finished...");
 		
 		[self completeOperation];
 		[pool drain];

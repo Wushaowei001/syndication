@@ -29,8 +29,6 @@
 		
 		NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 		
-		CLLog(@"marking %@ from %@ as read...", itemGuid, feedGoogleUrl);
-		
 		if (feedGoogleUrl == nil || [feedGoogleUrl length] == 0 || itemGuid == nil || [itemGuid length] == 0) {
 			[self completeOperation];
 			[pool drain];
@@ -70,8 +68,6 @@
 			
 			[self addTag:@"user/-/state/com.google/read" forUrlString:feedGoogleUrl item:itemGuid token:token auth:googleAuth statusCode:&statusCode];
 		}
-		
-		CLLog(@"finished...");
 		
 		[self completeOperation];
 		[pool drain];

@@ -60,10 +60,7 @@
 				FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 				
 				if (![db open]) {
-					CLLog(@"failed to connect to database!");
-					[self completeOperation];
-					[pool drain];
-					return;
+					[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
 				}
 				
 				for (NSDictionary *itemDict in items) {
@@ -207,8 +204,7 @@
 	FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 	
 	if (![db open]) {
-		CLLog(@"failed to connect to database!");
-		return nil;
+		[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
 	}
 	
 	FMResultSet *rs = [db executeQuery:@"SELECT post.*, feed.Title AS FeedTitle, feed.Url AS FeedUrlString FROM post, feed WHERE post.FeedId=feed.Id AND feed.IsFromGoogle=1 AND post.IsStarred=1"];
@@ -227,7 +223,7 @@
 
 - (void)dispatchAddItemsDelegateMessage:(NSArray *)items {
 	if ([NSThread isMainThread] == NO) {
-		CLLog(@"oops, this code should only be run from the main thread!!");
+		[NSException raise:@"Thread error" format:@"This function should only be called from the main thread!"];
 	}
 	
 	[[self delegate] googleStarredOperation:self addStarredItems:items];
@@ -235,7 +231,7 @@
 
 - (void)dispatchRemoveItemsDelegateMessage:(NSArray *)items {
 	if ([NSThread isMainThread] == NO) {
-		CLLog(@"oops, this code should only be run from the main thread!!");
+		[NSException raise:@"Thread error" format:@"This function should only be called from the main thread!"];
 	}
 	
 	[[self delegate] googleStarredOperation:self removeStarredItems:items];
@@ -243,7 +239,7 @@
 
 - (void)dispatchDidAddHiddenFeedDelegateMessage:(CLSourceListFeed *)feed {
 	if ([NSThread isMainThread] == NO) {
-		CLLog(@"oops, this code should only be run from the main thread!!");
+		[NSException raise:@"Thread error" format:@"This function should only be called from the main thread!"];
 	}
 	
 	[[self delegate] googleStarredOperation:self didAddNewHiddenFeed:feed];

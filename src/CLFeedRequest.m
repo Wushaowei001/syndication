@@ -30,7 +30,6 @@
 }
 
 - (void)dealloc {
-	CLLog(@"feed request dealloc");
 	[NSObject cancelPreviousPerformRequestsWithTarget:self];
 	
 	if ([safetyTimer isValid]) {
@@ -47,8 +46,6 @@
 }
 
 - (void)startConnection {
-	CLLog(@"starting connection for %@", [feed extractTitleForDisplay]);
-	
 	if ([safetyTimer isValid]) {
 		[safetyTimer invalidate];
 		[self setSafetyTimer:nil];
@@ -83,8 +80,6 @@
 }
 
 - (void)stopConnection {
-	CLLog(@"stopping connection for %@", [feed extractTitleForDisplay]);
-	
 	[urlConnection cancel];
 	
 	if ([safetyTimer isValid]) {
@@ -96,24 +91,6 @@
 }
 
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
-	CLLog(@"didReceiveResponse %@", [feed extractTitleForDisplay]);
-	
-	/*CLLog(@"----------------------------");
-	CLLog(@"url: %@", [[response URL] absoluteString]);
-	
-	if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
-		CLLog(@"status code: %ld", [(NSHTTPURLResponse *)response statusCode]);
-		
-		NSDictionary *headers = [(NSHTTPURLResponse *)response allHeaderFields];
-		NSArray *keys = [headers allKeys];
-		
-		for (NSString *key in keys) {
-			CLLog(@"%@: %@", key, [headers objectForKey:key]);
-		}
-	}
-	
-	CLLog(@"----------------------------");*/
-	
 	[self setUrlResponse:response];
 	
 	[receivedData setLength:0];
@@ -128,19 +105,10 @@
 }
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
-	CLLog(@"didFailWithError %@ %ld", [feed extractTitleForDisplay], [error code]);
-	
 	if ([error code] == -1009) {
-		CLLog(@"feed parse offline... retrying %@ soon", [feed extractTitleForDisplay]);
-		
 		[self performSelector:@selector(startConnection) withObject:nil afterDelay:OFFLINE_RETRY_PAUSE];
-		
-		CLLog(@"timer set for retry...");
-		
 		return;
 	}
-	
-	CLLog(@"after");
 	
 	if ([safetyTimer isValid]) {
 		[safetyTimer invalidate];
@@ -151,8 +119,6 @@
 }
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
-	CLLog(@"connectionDidFinishLoading %@", [feed extractTitleForDisplay]);
-	
 	if ([safetyTimer isValid]) {
 		[safetyTimer invalidate];
 		[self setSafetyTimer:nil];

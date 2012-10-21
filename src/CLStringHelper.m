@@ -19,8 +19,6 @@
 		return stringFromData;
 	}
 	
-	CLLog(@"encoding failed, falling back");
-	
 	// in case of failure, try other encodings
 	if (stringEncoding != NSUTF8StringEncoding) {
 		stringFromData = [[[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding] autorelease];
@@ -30,8 +28,6 @@
 		return stringFromData;
 	}
 	
-	CLLog(@"encoding failed, falling back");
-	
 	if (stringEncoding != NSISOLatin1StringEncoding) {
 		stringFromData = [[[NSString alloc] initWithData:data encoding:NSISOLatin1StringEncoding] autorelease];
 	}
@@ -39,8 +35,6 @@
 	if (stringFromData != nil) {
 		return stringFromData;
 	}
-	
-	CLLog(@"encoding failed, falling back");
 	
 	if (stringEncoding != NSASCIIStringEncoding) {
 		stringFromData = [[[NSString alloc] initWithData:data encoding:NSASCIIStringEncoding] autorelease];
@@ -50,8 +44,6 @@
 		return stringFromData;
 	}
 	
-	CLLog(@"encoding failed, falling back");
-	
 	if (stringEncoding != NSUnicodeStringEncoding) {
 		stringFromData = [[[NSString alloc] initWithData:data encoding:NSUnicodeStringEncoding] autorelease];
 	}
@@ -59,8 +51,6 @@
 	if (stringFromData != nil) {
 		return stringFromData;
 	}
-	
-	CLLog(@"encoding failed, falling back");
 	
 	if (stringEncoding != NSJapaneseEUCStringEncoding) {
 		stringFromData = [[[NSString alloc] initWithData:data encoding:NSJapaneseEUCStringEncoding] autorelease];
@@ -70,8 +60,6 @@
 		return stringFromData;
 	}
 	
-	CLLog(@"encoding failed, falling back");
-	
 	if (stringEncoding != NSShiftJISStringEncoding) {
 		stringFromData = [[[NSString alloc] initWithData:data encoding:NSShiftJISStringEncoding] autorelease];
 	}
@@ -79,8 +67,6 @@
 	if (stringFromData != nil) {
 		return stringFromData;
 	}
-	
-	CLLog(@"encoding failed, falling back");
 	
 	if (stringEncoding != NSISOLatin2StringEncoding) {
 		stringFromData = [[[NSString alloc] initWithData:data encoding:NSISOLatin2StringEncoding] autorelease];
@@ -90,8 +76,6 @@
 		return stringFromData;
 	}
 	
-	CLLog(@"encoding failed, falling back");
-	
 	if (stringEncoding != NSWindowsCP1251StringEncoding) {
 		stringFromData = [[[NSString alloc] initWithData:data encoding:NSWindowsCP1251StringEncoding] autorelease];
 	}
@@ -99,8 +83,6 @@
 	if (stringFromData != nil) {
 		return stringFromData;
 	}
-	
-	CLLog(@"encoding failed, falling back");
 	
 	if (stringEncoding != NSWindowsCP1252StringEncoding) {
 		stringFromData = [[[NSString alloc] initWithData:data encoding:NSWindowsCP1252StringEncoding] autorelease];
@@ -110,8 +92,6 @@
 		return stringFromData;
 	}
 	
-	CLLog(@"encoding failed, falling back");
-	
 	if (stringEncoding != NSWindowsCP1253StringEncoding) {
 		stringFromData = [[[NSString alloc] initWithData:data encoding:NSWindowsCP1253StringEncoding] autorelease];
 	}
@@ -119,8 +99,6 @@
 	if (stringFromData != nil) {
 		return stringFromData;
 	}
-	
-	CLLog(@"encoding failed, falling back");
 	
 	if (stringEncoding != NSWindowsCP1254StringEncoding) {
 		stringFromData = [[[NSString alloc] initWithData:data encoding:NSWindowsCP1254StringEncoding] autorelease];
@@ -130,8 +108,6 @@
 		return stringFromData;
 	}
 	
-	CLLog(@"encoding failed, falling back");
-	
 	if (stringEncoding != NSWindowsCP1250StringEncoding) {
 		stringFromData = [[[NSString alloc] initWithData:data encoding:NSWindowsCP1250StringEncoding] autorelease];
 	}
@@ -139,8 +115,6 @@
 	if (stringFromData != nil) {
 		return stringFromData;
 	}
-	
-	CLLog(@"encoding failed, falling back");
 	
 	if (stringEncoding != NSMacOSRomanStringEncoding) {
 		stringFromData = [[[NSString alloc] initWithData:data encoding:NSMacOSRomanStringEncoding] autorelease];
@@ -150,14 +124,8 @@
 		return stringFromData;
 	}
 	
-	CLLog(@"encoding failed, falling back");
-	
 	if (stringEncoding != NSUTF32StringEncoding) {
 		stringFromData = [[[NSString alloc] initWithData:data encoding:NSUTF32StringEncoding] autorelease];
-	}
-	
-	if (stringFromData == nil) {
-		CLLog(@"all encodings failed");
 	}
 	
 	return stringFromData;

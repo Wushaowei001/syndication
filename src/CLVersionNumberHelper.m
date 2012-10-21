@@ -20,8 +20,6 @@ static BOOL isRunningLionOrNewer;
 	Gestalt(gestaltSystemVersionMajor, &majorVersionNumber);
 	Gestalt(gestaltSystemVersionMinor, &minorVersionNumber);
 	
-	CLLog(@"os = %d.%d", majorVersionNumber, minorVersionNumber);
-	
 	if ((majorVersionNumber == 10 && minorVersionNumber >= 7) || majorVersionNumber >= 11) {
 		isRunningLionOrNewer = YES;
 	} else {

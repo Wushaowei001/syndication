@@ -16,7 +16,6 @@
 	NSURL *fetchUrl = [NSURL URLWithString:urlString];
 	
 	if (fetchUrl == nil) {
-		CLLog(@"invalid url");
 		return nil;
 	}
 	
@@ -49,18 +48,12 @@
 		fetchUrlResponse = nil;
 		fetchError = nil;
 		
-		CLLog(@"before %@", urlString);
 		fetchData = [NSURLConnection sendSynchronousRequest:fetchUrlRequest returningResponse:&fetchUrlResponse error:&fetchError];
-		CLLog(@"after %@", urlString);
 		tryAgain = NO;
 		
 		// keep trying if connection is offline
 		if (fetchData == nil && fetchError != nil && [fetchError code] == -1009) {
-			CLLog(@"connection offline... retrying %@ soon", urlString);
-			
 			[NSThread sleepForTimeInterval:OFFLINE_RETRY_PAUSE];
-			
-			CLLog(@"wake %@", urlString);
 			
 			fetchData = nil;
 			fetchUrlResponse = nil;
@@ -71,41 +64,19 @@
 		
 	} while (tryAgain);
 	
-	CLLog(@"outside of loop");
-	
 	if (urlResponse != nil) {
 		*urlResponse = fetchUrlResponse;
 	}
 	
 	[[NSURLCache sharedURLCache] removeCachedResponseForRequest:fetchUrlRequest];
 	
-	if (fetchError != nil) {
-		CLLog(@"code = %ld, error = %@, recovery = %@", [fetchError code], [fetchError localizedDescription], [fetchError localizedRecoverySuggestion]);
-	}
-	
 	if ([fetchUrlResponse isKindOfClass:[NSHTTPURLResponse class]]) {
-		
 		if ([CLUrlFetcher isSuccessStatusCode:[(NSHTTPURLResponse *)fetchUrlResponse statusCode]] == NO) {
-			CLLog(@"%@ return code = %ld", urlString, [(NSHTTPURLResponse *)fetchUrlResponse statusCode]);
-			
-			NSDictionary *headers = [(NSHTTPURLResponse *)fetchUrlResponse allHeaderFields];
-			NSArray *keys = [headers allKeys];
-			
-			CLLog(@"--------------- HEADERS -------------------");
-			
-			for (NSString *key in keys) {
-				CLLog(@"%@: %@", key, [headers objectForKey:key]);
-			}
-			
-			CLLog(@"-------------------------------------------");
-			
 			if (nilOnFail) {
 				return nil;
 			}
 		}
 	}
-	
-	CLLog(@"end of fetch");
 	
 	return fetchData;
 }
@@ -115,7 +86,6 @@
 	NSURL *fetchUrl = [NSURL URLWithString:urlString];
 	
 	if (fetchUrl == nil) {
-		CLLog(@"invalid url");
 		return nil;
 	}
 	

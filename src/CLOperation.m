@@ -23,7 +23,7 @@
 
 - (void)dispatchDidStartDelegateMessage {
 	if ([NSThread isMainThread] == NO) {
-		CLLog(@"oops, this code should only be run from the main thread!!");
+		[NSException raise:@"Thread error" format:@"This function should only be called from the main thread!"];
 	}
 	
 	[[self delegate] didStartOperation:self];
@@ -31,7 +31,7 @@
 
 - (void)dispatchDidFinishDelegateMessage {
 	if ([NSThread isMainThread] == NO) {
-		CLLog(@"oops, this code should only be run from the main thread!!");
+		[NSException raise:@"Thread error" format:@"This function should only be called from the main thread!"];
 	}
 	
 	[[self delegate] didFinishOperation:self];

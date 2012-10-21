@@ -60,7 +60,6 @@
 		[self performSelectorOnMainThread:@selector(dispatchDidStartDelegateMessage) withObject:nil waitUntilDone:YES];
 		
 		if (feed == nil || data == nil) {
-			CLLog(@"missing parse data");
 			[self performSelectorOnMainThread:@selector(dispatchDidFinishDelegateMessage) withObject:nil waitUntilDone:YES];
 			[pool drain];
 			return;
@@ -69,7 +68,6 @@
 		BOOL isFirstSync = NO;
 		
 		if ([feed lastSyncPosts] == nil) {
-			CLLog(@"first sync for %@", [feed extractTitleForDisplay]);
 			isFirstSync = YES;
 		}
 		
@@ -165,10 +163,7 @@
 					FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 					
 					if (![db open]) {
-						CLLog(@"failed to connect to database!");
-						[self performSelectorOnMainThread:@selector(dispatchDidFinishDelegateMessage) withObject:nil waitUntilDone:YES];
-						[pool drain];
-						return;
+						[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
 					}
 					
 					for (CLPost *post in probablyNewPosts) {
@@ -215,8 +210,6 @@
 						
 						if (postIsNew) {
 							[newPosts addObject:post];
-						} else {
-							CLLog(@"false positive, probably new post that wasn't actually new");
 						}
 					}
 					
@@ -247,8 +240,6 @@
 				}
 				
 				[feed setPostsToAddToDB:newPosts];
-				
-				CLLog(@"found %qu new posts for %@", [newPosts count], [feed extractTitleForDisplay]);
 				
 				[self performSelectorOnMainThread:@selector(dispatchNewPostsDelegateMessage) withObject:nil waitUntilDone:YES];
 			}
@@ -305,16 +296,12 @@
 		}
 		
 		if (postsDidChange) {
-			CLLog(@"posts did change for %@", [feed extractTitleForDisplay]);
 			[feed setLastSyncPosts:syncPosts];
 			
 			FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 			
 			if (![db open]) {
-				CLLog(@"failed to connect to database!");
-				[self performSelectorOnMainThread:@selector(dispatchDidFinishDelegateMessage) withObject:nil waitUntilDone:YES];
-				[pool drain];
-				return;
+				[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
 			}
 			
 			NSData *syncPostsData = [NSArchiver archivedDataWithRootObject:syncPosts];
@@ -322,8 +309,6 @@
 			
 			[db close];
 		}
-		
-		CLLog(@"end of parsing for %@", [feed extractTitleForDisplay]);
 		
 		[self performSelectorOnMainThread:@selector(dispatchDidFinishDelegateMessage) withObject:nil waitUntilDone:YES];
 		
@@ -391,8 +376,7 @@
 				FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 				
 				if (![db open]) {
-					CLLog(@"failed to connect to database!");
-					db = nil;
+					[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
 				}
 				
 				[db executeUpdate:@"UPDATE feed SET WebsiteLink=? WHERE Id=?", hrefValue, [NSNumber numberWithInteger:[feed dbId]]];
@@ -497,8 +481,7 @@
 					FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 					
 					if (![db open]) {
-						CLLog(@"failed to connect to database!");
-						db = nil;
+						[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
 					}
 					
 					[db executeUpdate:@"UPDATE feed SET WebsiteLink=? WHERE Id=?", hrefValue, [NSNumber numberWithInteger:[feed dbId]]];
@@ -610,7 +593,7 @@
 
 - (void)dispatchNewPostsDelegateMessage {
 	if ([NSThread isMainThread] == NO) {
-		CLLog(@"oops, this code should only be run from the main thread!!");
+		[NSException raise:@"Thread error" format:@"This function should only be called from the main thread!"];
 	}
 	
 	[delegate feedParserOperationFoundNewPostsForFeed:feed];
@@ -618,7 +601,7 @@
 
 - (void)dispatchTitleDelegateMessage {
 	if ([NSThread isMainThread] == NO) {
-		CLLog(@"oops, this code should only be run from the main thread!!");
+		[NSException raise:@"Thread error" format:@"This function should only be called from the main thread!"];
 	}
 	
 	[delegate feedParserOperationFoundTitleForFeed:feed];
@@ -626,7 +609,7 @@
 
 - (void)dispatchWebsiteLinkDelegateMessage {
 	if ([NSThread isMainThread] == NO) {
-		CLLog(@"oops, this code should only be run from the main thread!!");
+		[NSException raise:@"Thread error" format:@"This function should only be called from the main thread!"];
 	}
 	
 	[delegate feedParserOperationFoundWebsiteLinkForFeed:feed];

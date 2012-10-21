@@ -81,7 +81,6 @@ static NSArray *attributeWhiteList;
 		}
 	} @catch (...) {
 		urlString = @"";
-		CLLog(@"ignoring url: %@", urlString);
 	}
 	
 	return urlString;

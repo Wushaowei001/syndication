@@ -118,8 +118,6 @@
 				NSString *continuation = [postsDictionary objectForKey:@"continuation"];
 				
 				if (continuation != nil && [continuation isEqual:@""] == NO && allUnreadDownloaded == NO) {
-					
-					CLLog(@"1fetching more items for %@", [feed googleUrl]);
 					postsData = [self fetch:GOOGLE_FETCH_SIZE itemsForUrlString:[feed googleUrl] since:since continuation:continuation usingAuth:googleAuth statusCode:&statusCode];
 					
 					if ([CLUrlFetcher isSuccessStatusCode:statusCode] == NO || postsData == nil) {
@@ -167,8 +165,6 @@
 				NSString *continuation = [postsDictionary objectForKey:@"continuation"];
 				
 				if (continuation != nil && [continuation isEqual:@""] == NO && allUnreadProcessed == NO) {
-					
-					CLLog(@"2fetching more items for %@", [feed googleUrl]);
 					postsData = [self fetch:GOOGLE_FETCH_SIZE unreadItemsForUrlString:[feed googleUrl] since:unreadItemsSince continuation:continuation usingAuth:googleAuth statusCode:&statusCode];
 					
 					if ([CLUrlFetcher isSuccessStatusCode:statusCode] == NO || postsData == nil) {
@@ -188,7 +184,6 @@
 		
 		for (NSNumber *dbUnreadGuid in dbUnreadGuids) {
 			if ([feedUnreadGuids containsObject:dbUnreadGuid] == NO) {
-				CLLog(@"%@ was read externally", dbUnreadGuid);
 				[readExternallyGuids addObject:dbUnreadGuid];
 			}
 		}
@@ -197,9 +192,7 @@
 		NSMutableSet *unreadExternallyGuids = [NSMutableSet set];
 		
 		for (NSNumber *feedUnreadGuid in feedUnreadGuids) {
-			CLLog(@"count: %ld contains %@", [dbUnreadGuids count], feedUnreadGuid);
 			if ([dbUnreadGuids containsObject:feedUnreadGuid] == NO) {
-				CLLog(@"%@ was marked unread externally", feedUnreadGuid);
 				[unreadExternallyGuids addObject:feedUnreadGuid];
 			}
 		}
@@ -211,7 +204,6 @@
 			FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 			
 			if (![db open]) {
-				CLLog(@"failed to connect to database!");
 				[self completeOperation];
 				[pool drain];
 				return;
@@ -220,10 +212,7 @@
 			for (NSString *readExternallyGuid in readExternallyGuids) {
 				FMResultSet *rs = [db executeQuery:@"SELECT Id FROM post WHERE Guid=?", readExternallyGuid];
 				
-				CLLog(@"looking up db id for %@", readExternallyGuid);
-				
 				if ([rs next]) {
-					CLLog(@"found %ld", [rs longForColumn:@"Id"]);
 					[readExternallyDbIds addObject:[NSNumber numberWithInteger:[rs longForColumn:@"Id"]]];
 				}
 				
@@ -233,10 +222,7 @@
 			for (NSString *unreadExternallyGuid in unreadExternallyGuids) {
 				FMResultSet *rs = [db executeQuery:@"SELECT Id FROM post WHERE Guid=?", unreadExternallyGuid];
 				
-				CLLog(@"looking up db id for %@", unreadExternallyGuid);
-				
 				if ([rs next]) {
-					CLLog(@"found %ld", [rs longForColumn:@"Id"]);
 					[unreadExternallyDbIds addObject:[NSNumber numberWithInteger:[rs longForColumn:@"Id"]]];
 				}
 				
@@ -285,8 +271,6 @@
 			}
 		}
 		
-		CLLog(@"done");
-		
 		[self completeOperation];
 		[pool drain];
 		
@@ -312,8 +296,7 @@
 			FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 			
 			if (![db open]) {
-				CLLog(@"failed to connect to database!");
-				return;
+				[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
 			}
 			
 			[db executeUpdate:@"UPDATE feed SET WebsiteLink=? WHERE Id=?", hrefValue, [NSNumber numberWithInteger:[feed dbId]]];
@@ -346,8 +329,7 @@
 	FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 	
 	if (![db open]) {
-		CLLog(@"failed to connect to database!");
-		return 0;
+		[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
 	}
 	
 	for (NSDictionary *itemDict in items) {
@@ -410,10 +392,7 @@
 		// even though we ask for only unread items, google will return read items too with the property isReadStateLocked set to true
 		NSNumber *isReadStateLocked = [itemDict objectForKey:@"isReadStateLocked"];
 		
-		CLLog(@"unread: %@", [itemDict objectForKey:@"id"]);
-		
 		if (isReadStateLocked == nil || [isReadStateLocked boolValue] == NO) {
-			CLLog(@"adding");
 			[unreadGuids addObject:[itemDict objectForKey:@"id"]];
 			unreadItemsFound++;
 		}
@@ -426,8 +405,7 @@
 	FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 	
 	if (![db open]) {
-		CLLog(@"failed to connect to database!");
-		return;
+		[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
 	}
 	
 	[db executeUpdate:@"UPDATE feed SET GoogleNewestItemTimestamp=? WHERE Id=?", [NSNumber numberWithInteger:timestamp], [NSNumber numberWithInteger:[feed dbId]]];
@@ -438,7 +416,7 @@
 
 - (void)dispatchPostReadDelegateMessage:(NSNumber *)dbId {
 	if ([NSThread isMainThread] == NO) {
-		CLLog(@"oops, this code should only be run from the main thread!!");
+		[NSException raise:@"Thread error" format:@"This function should only be called from the main thread!"];
 	}
 	
 	[[self delegate] googleFeedOperation:self markPostWithDbIdAsRead:[dbId integerValue]];
@@ -446,7 +424,7 @@
 
 - (void)dispatchPostUnreadDelegateMessage:(NSNumber *)dbId {
 	if ([NSThread isMainThread] == NO) {
-		CLLog(@"oops, this code should only be run from the main thread!!");
+		[NSException raise:@"Thread error" format:@"This function should only be called from the main thread!"];
 	}
 	
 	[[self delegate] googleFeedOperation:self markPostWithDbIdAsUnread:[dbId integerValue]];
@@ -454,7 +432,7 @@
 
 - (void)dispatchWebsiteLinkDelegateMessage {
 	if ([NSThread isMainThread] == NO) {
-		CLLog(@"oops, this code should only be run from the main thread!!");
+		[NSException raise:@"Thread error" format:@"This function should only be called from the main thread!"];
 	}
 	
 	[[self delegate] googleFeedOperation:self foundWebsiteLinkForFeed:feed];
@@ -462,7 +440,7 @@
 
 - (void)dispatchTitleDelegateMessage {
 	if ([NSThread isMainThread] == NO) {
-		CLLog(@"oops, this code should only be run from the main thread!!");
+		[NSException raise:@"Thread error" format:@"This function should only be called from the main thread!"];
 	}
 	
 	[[self delegate] googleFeedOperation:self foundTitleForFeed:feed];
@@ -470,7 +448,7 @@
 
 - (void)dispatchNewPostsDelegateMessage:(NSArray *)newPosts {
 	if ([NSThread isMainThread] == NO) {
-		CLLog(@"oops, this code should only be run from the main thread!!");
+		[NSException raise:@"Thread error" format:@"This function should only be called from the main thread!"];
 	}
 	
 	[[self delegate] googleFeedOperation:self foundNewPosts:newPosts forFeed:feed];

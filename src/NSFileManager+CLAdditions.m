@@ -33,14 +33,12 @@
 	BOOL exists = [self fileExistsAtPath:syndicationSupportDirectory isDirectory:&isDirectory];
 	
     if (exists && !isDirectory) {
-		CLLog(@"Application support directory exists but is not a directory");
         return nil;
     }
     
 	if (!exists) {
 		BOOL success = [self createDirectoryAtPath:syndicationSupportDirectory withIntermediateDirectories:YES attributes:nil error:nil];
 		if (!success) {
-			CLLog(@"Unable to create application support directory");
 			return nil;
 		}
 	}
@@ -66,10 +64,7 @@
 	BOOL regularExists = [self fileExistsAtPath:syndicationSupportDirectory];
 	
 	if (liteExists && liteIsDirectory && !regularExists) {
-		BOOL success = [self copyItemAtPath:syndicationLiteSupportDirectory toPath:syndicationSupportDirectory error:nil];
-		if (!success) {
-			CLLog(@"Unable to copy lite directory");
-		}
+		[self copyItemAtPath:syndicationLiteSupportDirectory toPath:syndicationSupportDirectory error:nil];
 	}
 }
 

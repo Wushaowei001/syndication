@@ -29,8 +29,6 @@
 		
 		NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 		
-		CLLog(@"removing %@... from folder %@", feedGoogleUrl, folder);
-		
 		if (feedGoogleUrl == nil || [feedGoogleUrl length] == 0 || folder == nil || [folder length] == 0) {
 			[self completeOperation];
 			[pool drain];
@@ -70,8 +68,6 @@
 			
 			[self removeFromFolder:folder forUrlString:feedGoogleUrl token:token auth:googleAuth statusCode:&statusCode];
 		}
-		
-		CLLog(@"finished...");
 		
 		[self completeOperation];
 		[pool drain];

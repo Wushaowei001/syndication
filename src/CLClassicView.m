@@ -176,12 +176,10 @@
 - (void)removePostsInRange:(NSRange)range preserveScrollPosition:(BOOL)preserveScroll updateMetadata:(BOOL)updateMetadata ignoreSelection:(BOOL)ignoreSelection {
 	
 	if (range.length == 0) {
-		CLLog(@"range.length == 0");
 		return;
 	}
 	
 	if ((range.location + range.length) > [posts count]) {
-		CLLog(@"(range.location + range.length) > [posts count]");
 		return;
 	}
 	

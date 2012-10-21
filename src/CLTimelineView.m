@@ -160,12 +160,10 @@
 - (void)removePostsInRange:(NSRange)range preserveScrollPosition:(BOOL)preserveScroll updateMetadata:(BOOL)updateMetadata {
 	
 	if (range.length == 0) {
-		CLLog(@"range.length == 0");
 		return;
 	}
 	
 	if ((range.location + range.length) > [timelineViewItems count]) {
-		CLLog(@"(range.location + range.length) > [timelineViewItems count]");
 		return;
 	}
 	
@@ -189,8 +187,6 @@
 		}
 		
 		CGFloat currentItemHeight = [[timelineViewItem view] frame].size.height;
-		
-		//CLLog(@"isNewPost = %ld currentItemHeight = %.2f height = %.2f heightAtLastUpdate = %.2f", [timelineViewItem isNewPost], currentItemHeight, [timelineViewItem height], [timelineViewItem heightAtLastUpdate]);
 		
 		// if isNewPost == YES, then this post is brand new, so we don't need to account for it
 		if ([timelineViewItem isNewPost] == NO) {
