@@ -137,6 +137,7 @@
 + (void)miscellaneousSetValue:(NSString *)value forKey:(NSString *)key;
 
 - (BOOL)tableExists:(NSString *)tableName inDb:(FMDatabase *)db;
+- (void)runDatabaseUpdateOnBackgroundThread:(NSString *)queryString, ... NS_REQUIRES_NIL_TERMINATION;
 - (void)loadFromDatabase;
 - (void)recursivelyLoadChildrenOf:(CLSourceListFolder *)folder usingDatabaseHandle:(FMDatabase *)db;
 - (void)updateFeedSyncStatus;

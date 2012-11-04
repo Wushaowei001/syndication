@@ -10,6 +10,7 @@
 #import "CLClassicView.h"
 #import "CLConstants.h"
 #import "CLDatabaseHelper.h"
+#import "CLDatabaseUpdateOperation.h"
 #import "CLDeleteHiddenOperation.h"
 #import "CLErrorHelper.h"
 #import "CLFeedParserOperation.h"
@@ -131,9 +132,9 @@ static NSArray *preferencesToolbarItems;
 
 + (BOOL)isSourceListItem:(CLSourceListItem *)item descendentOf:(CLSourceListItem *)parent {
 	while (item != nil) {
-        if (item == parent) {
-            return YES;
-        }
+		if (item == parent) {
+			return YES;
+		}
 		
 		if ([item isKindOfClass:[CLSourceListFeed class]]) {
 			item = [(CLSourceListFeed *)item enclosingFolderReference];
@@ -142,9 +143,9 @@ static NSArray *preferencesToolbarItems;
 		} else {
 			item = nil; // this prevents an infinite loop if we get something other that the two types that we can handle
 		}
-    }
-	
-    return NO;
+	}
+
+	return NO;
 }
 
 + (void)changeBadgeValueBy:(NSInteger)value forItem:(CLSourceListItem *)item {
@@ -341,17 +342,17 @@ static NSArray *preferencesToolbarItems;
 
 - (void)applicationWillFinishLaunching:(NSNotification *)aNotification {
 	
-    [[NSFileManager defaultManager] clCopyLiteDirectoryIfItExistsAndRegularDirectoryDoesnt];
-    
+	[[NSFileManager defaultManager] clCopyLiteDirectoryIfItExistsAndRegularDirectoryDoesnt];
+	
 	NSInteger thirtyMinutes = TIME_INTERVAL_MINUTE * 30;
 	NSInteger oneYear = TIME_INTERVAL_YEAR;
 	NSInteger oneMonth = TIME_INTERVAL_MONTH;
 	
-    NSDictionary *registrationDefaults = [NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithInteger:thirtyMinutes], PREFERENCES_CHECK_FOR_NEW_ARTICLES_KEY,
+	NSDictionary *registrationDefaults = [NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithInteger:thirtyMinutes], PREFERENCES_CHECK_FOR_NEW_ARTICLES_KEY,
 																					[NSNumber numberWithInteger:oneYear], PREFERENCES_REMOVE_ARTICLES_KEY,
 																					[NSNumber numberWithInteger:oneMonth], PREFERENCES_MARK_ARTICLES_AS_READ_KEY,
 																					[NSNumber numberWithBool:YES], PREFERENCES_DISPLAY_UNREAD_COUNT_IN_DOCK_KEY, nil]; 
-    [[NSUserDefaults standardUserDefaults] registerDefaults:registrationDefaults];
+	[[NSUserDefaults standardUserDefaults] registerDefaults:registrationDefaults];
 	
 	NSString *headlineFontName = @"HelveticaNeue-Medium";
 	NSString *databaseString = [SyndicationAppDelegate miscellaneousValueForKey:MISCELLANEOUS_HEADLINE_FONT_NAME];
@@ -401,7 +402,7 @@ static NSArray *preferencesToolbarItems;
 		[CLErrorHelper createAndDisplayError:@"NSZombieEnabled"];
 	}
 #endif
-    
+	
 	[self loadFromDatabase];
 	[self sortSourceList];
 	
@@ -459,14 +460,35 @@ static NSArray *preferencesToolbarItems;
 }
 
 - (BOOL)tableExists:(NSString *)tableName inDb:(FMDatabase *)db {
-    BOOL returnBool;
-    tableName = [tableName lowercaseString];
+	BOOL returnBool;
+	tableName = [tableName lowercaseString];
 	
-    FMResultSet *rs = [db executeQuery:@"select [sql] from sqlite_master where [type] = 'table' and lower(name) = ?", tableName];
-    returnBool = [rs next];
-    [rs close];
-    
-    return returnBool;
+	FMResultSet *rs = [db executeQuery:@"select [sql] from sqlite_master where [type] = 'table' and lower(name) = ?", tableName];
+	returnBool = [rs next];
+	[rs close];
+	
+	return returnBool;
+}
+
+- (void)runDatabaseUpdateOnBackgroundThread:(NSString *)queryString, ... {
+	NSMutableArray *parameters = [NSMutableArray array];
+	
+	va_list args;
+	va_start(args, queryString);
+	
+	for (id arg = va_arg(args, id); arg != nil; arg = va_arg(args, id)) {
+		[parameters addObject:arg];
+	}
+	
+	va_end(args);
+	
+	CLDatabaseUpdateOperation *dbOp = [[CLDatabaseUpdateOperation alloc] init];
+	[dbOp setQueryString:queryString];
+	[dbOp setParameters:parameters];
+	[dbOp setDelegate:self];
+	
+	[operationQueue addOperation:dbOp];
+	[dbOp release];
 }
 
 - (void)loadFromDatabase {
@@ -784,11 +806,11 @@ static NSArray *preferencesToolbarItems;
 }
 
 - (void)startRequestIfNoneInProgress {
-    if ([feedRequests count] == 0 && [feedsToSync count] == 0 && [operationQueue operationCount] == 0 && [googleOperationQueue operationCount] == 0) {
-        [self setRequestInProgress:NO];
-        [self setNumberOfActiveParseOps:0];
-    }
-    
+	if ([feedRequests count] == 0 && [feedsToSync count] == 0 && [operationQueue operationCount] == 0 && [googleOperationQueue operationCount] == 0) {
+		[self setRequestInProgress:NO];
+		[self setNumberOfActiveParseOps:0];
+	}
+	
 	while (requestInProgress == NO && [requestQueue count] > 0) {
 		
 		CLRequest *request = [[[requestQueue objectAtIndex:0] retain] autorelease];
@@ -1511,7 +1533,7 @@ static NSArray *preferencesToolbarItems;
 				}
 			}
 			
-			[db executeUpdate:UNREAD_COUNT_QUERY, [NSNumber numberWithInteger:[feed dbId]], [NSNumber numberWithInteger:[feed dbId]]];
+			[self runDatabaseUpdateOnBackgroundThread:UNREAD_COUNT_QUERY, [NSNumber numberWithInteger:[feed dbId]], [NSNumber numberWithInteger:[feed dbId]], nil];
 			
 			if ([feed isFromGoogle]) {
 				NSData *googleUnreadGuidsData = [NSArchiver archivedDataWithRootObject:[feed googleUnreadGuids]];
@@ -1690,16 +1712,16 @@ static NSArray *preferencesToolbarItems;
 					
 					if (postsAdded > 0) {
 						
-                        BOOL alreadyUpdatedSelection = NO;
-                        
-                        if (selectedRow >= 0 && selectedRow < ((NSInteger)[[classicView posts] count] - postsAdded)) {
-                            [[classicView tableView] selectRowIndexes:[NSIndexSet indexSetWithIndex:selectedRow] byExtendingSelection:NO];
-                            alreadyUpdatedSelection = YES;
-                        } else {
-                            [classicView setShouldIgnoreSelectionChange:YES];
-                            [[classicView tableView] deselectAll:self];
-                        }
-                        
+						BOOL alreadyUpdatedSelection = NO;
+						
+						if (selectedRow >= 0 && selectedRow < ((NSInteger)[[classicView posts] count] - postsAdded)) {
+							[[classicView tableView] selectRowIndexes:[NSIndexSet indexSetWithIndex:selectedRow] byExtendingSelection:NO];
+							alreadyUpdatedSelection = YES;
+						} else {
+							[classicView setShouldIgnoreSelectionChange:YES];
+							[[classicView tableView] deselectAll:self];
+						}
+						
 						if (scrollY != oldScrollY) {
 							[scrollView clScrollInstantlyTo:NSMakePoint(scrollX, scrollY)];
 						}
@@ -1836,16 +1858,16 @@ static NSArray *preferencesToolbarItems;
 			
 		} else {
 			
-            if ([operationQueue operationCount] == 1) {
-                if (activeRequestType == CLRequestNonGoogleSync || activeRequestType == CLRequestSpecificFeedsSync) {
-                    if ([feedRequests count] == 0 && [feedsToSync count] == 0) {
-                        [self setRequestInProgress:NO];
-                        [self startRequestIfNoneInProgress];
-                    }
-                } else if (activeRequestType == CLRequestDeleteHidden) {
-                    [self setRequestInProgress:NO];
-                    [self startRequestIfNoneInProgress];
-                }
+			if ([operationQueue operationCount] == 1) {
+				if (activeRequestType == CLRequestNonGoogleSync || activeRequestType == CLRequestSpecificFeedsSync) {
+					if ([feedRequests count] == 0 && [feedsToSync count] == 0) {
+						[self setRequestInProgress:NO];
+						[self startRequestIfNoneInProgress];
+					}
+				} else if (activeRequestType == CLRequestDeleteHidden) {
+					[self setRequestInProgress:NO];
+					[self startRequestIfNoneInProgress];
+				}
 			}
 		}
 	}
@@ -1893,24 +1915,16 @@ static NSArray *preferencesToolbarItems;
 	
 	[feed setIconLastRefreshed:[NSDate date]];
 	
-	FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
-	
-	if (![db open]) {
-		[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
-	}
-	
 	if ([feed icon] != nil) {
 		@try {
 			NSData *faviconData = [NSArchiver archivedDataWithRootObject:[feed icon]];
-			[db executeUpdate:@"UPDATE feed SET Icon=?, IconLastRefreshed=? WHERE Id=?", faviconData, [feed iconLastRefreshed], [NSNumber numberWithInteger:[feed dbId]]];
+			[self runDatabaseUpdateOnBackgroundThread:@"UPDATE feed SET Icon=?, IconLastRefreshed=? WHERE Id=?", faviconData, [feed iconLastRefreshed], [NSNumber numberWithInteger:[feed dbId]], nil];
 		} @catch (...) {
-			[db executeUpdate:@"UPDATE feed SET Icon=NULL, IconLastRefreshed=? WHERE Id=?", [feed iconLastRefreshed], [NSNumber numberWithInteger:[feed dbId]]];
+			[self runDatabaseUpdateOnBackgroundThread:@"UPDATE feed SET Icon=NULL, IconLastRefreshed=? WHERE Id=?", [feed iconLastRefreshed], [NSNumber numberWithInteger:[feed dbId]], nil];
 		}
 	} else {
-		[db executeUpdate:@"UPDATE feed SET Icon=NULL, IconLastRefreshed=? WHERE Id=?", [feed iconLastRefreshed], [NSNumber numberWithInteger:[feed dbId]]];
+		[self runDatabaseUpdateOnBackgroundThread:@"UPDATE feed SET Icon=NULL, IconLastRefreshed=? WHERE Id=?", [feed iconLastRefreshed], [NSNumber numberWithInteger:[feed dbId]], nil];
 	}
-	
-	[db close];
 	
 	CLTimer *iconTimer = [CLTimer scheduledTimerWithTimeInterval:ICON_REFRESH_INTERVAL target:self selector:@selector(timeToAddFeedToIconQueue:) userInfo:feed repeats:NO];
 	[iconRefreshTimers addObject:iconTimer];
@@ -2314,26 +2328,13 @@ static NSArray *preferencesToolbarItems;
 	
 	[self markViewItemsAsReadForPostDbId:dbId];
 	
-	db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
-	
-	if (![db open]) {
-		[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
-	}
-	
-	[db beginTransaction];
-	
-	[db executeUpdate:@"UPDATE post SET IsRead=1 WHERE Id=?", [NSNumber numberWithInteger:dbId]];
-	
-	[db executeUpdate:UNREAD_COUNT_QUERY, [NSNumber numberWithInteger:feedId], [NSNumber numberWithInteger:feedId]];
+	[self runDatabaseUpdateOnBackgroundThread:@"UPDATE post SET IsRead=1 WHERE Id=?", [NSNumber numberWithInteger:dbId], nil];
+	[self runDatabaseUpdateOnBackgroundThread:UNREAD_COUNT_QUERY, [NSNumber numberWithInteger:feedId], [NSNumber numberWithInteger:feedId], nil];
 	
 	if ([feed isFromGoogle]){
 		NSData *googleUnreadGuidsData = [NSArchiver archivedDataWithRootObject:[feed googleUnreadGuids]];
-		[db executeUpdate:@"UPDATE feed SET GoogleUnreadGuids=? WHERE Id=?", googleUnreadGuidsData, [NSNumber numberWithInteger:feedId]];
+		[self runDatabaseUpdateOnBackgroundThread:@"UPDATE feed SET GoogleUnreadGuids=? WHERE Id=?", googleUnreadGuidsData, [NSNumber numberWithInteger:feedId], nil];
 	}
-	
-	[db commit];
-	
-	[db close];
 	
 	if (propagate) {
 		
@@ -2397,26 +2398,13 @@ static NSArray *preferencesToolbarItems;
 	
 	[self markViewItemsAsUnreadForPostDbId:dbId];
 	
-	db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
-	
-	if (![db open]) {
-		[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
-	}
-	
-	[db beginTransaction];
-	
-	[db executeUpdate:@"UPDATE post SET IsRead=0 WHERE Id=?", [NSNumber numberWithInteger:dbId]];
-	
-	[db executeUpdate:UNREAD_COUNT_QUERY, [NSNumber numberWithInteger:feedId], [NSNumber numberWithInteger:feedId]];
+	[self runDatabaseUpdateOnBackgroundThread:@"UPDATE post SET IsRead=0 WHERE Id=?", [NSNumber numberWithInteger:dbId], nil];
+	[self runDatabaseUpdateOnBackgroundThread:UNREAD_COUNT_QUERY, [NSNumber numberWithInteger:feedId], [NSNumber numberWithInteger:feedId], nil];
 	
 	if ([feed isFromGoogle]){
 		NSData *googleUnreadGuidsData = [NSArchiver archivedDataWithRootObject:[feed googleUnreadGuids]];
-		[db executeUpdate:@"UPDATE feed SET GoogleUnreadGuids=? WHERE Id=?", googleUnreadGuidsData, [NSNumber numberWithInteger:feedId]];
+		[self runDatabaseUpdateOnBackgroundThread:@"UPDATE feed SET GoogleUnreadGuids=? WHERE Id=?", googleUnreadGuidsData, [NSNumber numberWithInteger:feedId], nil];
 	}
-	
-	[db commit];
-	
-	[db close];
 }
 
 - (void)markViewItemsAsReadForPostDbId:(NSInteger)postDbId {
@@ -2849,21 +2837,13 @@ static NSArray *preferencesToolbarItems;
 		[windowController updateWindowTitle];
 	}
 	
-	FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
-	
-	if (![db open]) {
-		[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
-	}
-	
 	if ([item isKindOfClass:[CLSourceListFeed class]]) {
 		CLSourceListFeed *feed = (CLSourceListFeed *)item;
-		[db executeUpdate:@"UPDATE feed SET Title=? WHERE Id=?", [feed title], [NSNumber numberWithInteger:[feed dbId]]];
+		[self runDatabaseUpdateOnBackgroundThread:@"UPDATE feed SET Title=? WHERE Id=?", [feed title], [NSNumber numberWithInteger:[feed dbId]], nil];
 	} else if ([item isKindOfClass:[CLSourceListFolder class]]) {
 		CLSourceListFolder *folder = (CLSourceListFolder *)item;
-		[db executeUpdate:@"UPDATE folder SET Title=? WHERE Id=?", [folder title], [NSNumber numberWithInteger:[folder dbId]]];
+		[self runDatabaseUpdateOnBackgroundThread:@"UPDATE folder SET Title=? WHERE Id=?", [folder title], [NSNumber numberWithInteger:[folder dbId]], nil];
 	}
-	
-	[db close];
 }
 
 - (void)openNewWindowForSubscription:(CLSourceListItem *)subscription {
@@ -3377,20 +3357,12 @@ static NSArray *preferencesToolbarItems;
 				[self queueGoogleMarkReadOperationForGoogleUrl:[post objectForKey:@"GoogleUrl"] itemGuid:[post objectForKey:@"Guid"] addToDb:YES];
 			}
 		}
-		
-		db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
-		
-		if (![db open]) {
-			[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
-		}
-		
+				
 		BOOL doManualUpdate = NO;
-		
-		[db beginTransaction];
 		
 		if (newItems) {
 			
-			[db executeUpdate:@"UPDATE post SET IsRead=1"];
+			[self runDatabaseUpdateOnBackgroundThread:@"UPDATE post SET IsRead=1", nil];
 			
 			NSMutableSet *googleUnreadGuids = [[NSMutableSet alloc] init];
 			NSData *googleUnreadGuidsData = [NSArchiver archivedDataWithRootObject:googleUnreadGuids];
@@ -3403,19 +3375,19 @@ static NSArray *preferencesToolbarItems;
 			
 			[googleUnreadGuids release];
 			
-			[db executeUpdate:@"UPDATE feed SET UnreadCount=0"];
-			[db executeUpdate:@"UPDATE feed SET GoogleUnreadGuids=? WHERE IsFromGoogle=1", googleUnreadGuidsData];
+			[self runDatabaseUpdateOnBackgroundThread:@"UPDATE feed SET UnreadCount=0", nil];
+			[self runDatabaseUpdateOnBackgroundThread:@"UPDATE feed SET GoogleUnreadGuids=? WHERE IsFromGoogle=1", googleUnreadGuidsData, nil];
 			
 		} else if (starredItems) {
 			
-			[db executeUpdate:@"UPDATE post SET IsRead=1 WHERE IsStarred=1"];
+			[self runDatabaseUpdateOnBackgroundThread:@"UPDATE post SET IsRead=1 WHERE IsStarred=1", nil];
 			doManualUpdate = YES;
 			
 		} else if (item != nil && [item isKindOfClass:[CLSourceListFeed class]]) {
 			
 			NSNumber *dbIdNum = [NSNumber numberWithInteger:[(CLSourceListFeed *)item dbId]];
-			[db executeUpdate:@"UPDATE post SET IsRead=1 WHERE FeedId=? AND IsRead=0", dbIdNum];
-			[db executeUpdate:@"UPDATE feed SET UnreadCount=0 WHERE Id=?", dbIdNum];
+			[self runDatabaseUpdateOnBackgroundThread:@"UPDATE post SET IsRead=1 WHERE FeedId=? AND IsRead=0", dbIdNum, nil];
+			[self runDatabaseUpdateOnBackgroundThread:@"UPDATE feed SET UnreadCount=0 WHERE Id=?", dbIdNum, nil];
 			
 			if ([(CLSourceListFeed *)item isFromGoogle]) {
 				NSMutableSet *googleUnreadGuids = [[NSMutableSet alloc] init];
@@ -3424,17 +3396,17 @@ static NSArray *preferencesToolbarItems;
 				[(CLSourceListFeed *)item setGoogleUnreadGuids:googleUnreadGuids];
 				[googleUnreadGuids release];
 				
-				[db executeUpdate:@"UPDATE feed SET GoogleUnreadGuids=? WHERE Id=?", googleUnreadGuidsData, dbIdNum];
+				[self runDatabaseUpdateOnBackgroundThread:@"UPDATE feed SET GoogleUnreadGuids=? WHERE Id=?", googleUnreadGuidsData, dbIdNum, nil];
 			}
 			
 		} else if (item != nil && [item isKindOfClass:[CLSourceListFolder class]]) {
 			
-			[db executeUpdate:[NSString stringWithFormat:@"UPDATE post SET IsRead=1 WHERE Id IN (SELECT post.Id FROM post, feed, folder WHERE post.FeedId=feed.Id AND feed.FolderId=folder.Id AND folder.Path LIKE '%@%%') AND IsRead=0", [(CLSourceListFolder *)item path]]];
+			[self runDatabaseUpdateOnBackgroundThread:[NSString stringWithFormat:@"UPDATE post SET IsRead=1 WHERE Id IN (SELECT post.Id FROM post, feed, folder WHERE post.FeedId=feed.Id AND feed.FolderId=folder.Id AND folder.Path LIKE '%@%%') AND IsRead=0", [(CLSourceListFolder *)item path]], nil];
 			doManualUpdate = YES;
 			
 		} else if (timestamp != nil) {
 			
-			[db executeUpdate:@"UPDATE post SET IsRead=1 WHERE IsRead=0 AND Received < ?", timestamp];
+			[self runDatabaseUpdateOnBackgroundThread:@"UPDATE post SET IsRead=1 WHERE IsRead=0 AND Received < ?", timestamp, nil];
 			doManualUpdate = YES;
 		}
 		
@@ -3464,19 +3436,15 @@ static NSArray *preferencesToolbarItems;
 			
 			for (CLSourceListFeed *feed in feedsToUpdateUnreadCount) {
 				NSNumber *feedId = [NSNumber numberWithInteger:[feed dbId]];
-				[db executeUpdate:UNREAD_COUNT_QUERY, feedId, feedId];
+				[self runDatabaseUpdateOnBackgroundThread:UNREAD_COUNT_QUERY, feedId, feedId, nil];
 			}
 			
 			for (CLSourceListFeed *feed in feedsToUpdateGoogleUnreadGuids) {
 				NSNumber *feedId = [NSNumber numberWithInteger:[feed dbId]];
 				NSData *googleUnreadGuidsData = [NSArchiver archivedDataWithRootObject:[feed googleUnreadGuids]];
-				[db executeUpdate:@"UPDATE feed SET GoogleUnreadGuids=? WHERE Id=?", googleUnreadGuidsData, feedId];
+				[self runDatabaseUpdateOnBackgroundThread:@"UPDATE feed SET GoogleUnreadGuids=? WHERE Id=?", googleUnreadGuidsData, feedId, nil];
 			}
 		}
-		
-		[db commit];
-		
-		[db close];
 		
 		if (newItems) {
 			[self changeNewItemsBadgeValueBy:(totalUnread * -1)];
@@ -3620,15 +3588,7 @@ static NSArray *preferencesToolbarItems;
 			}
 		}
 		
-		db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
-		
-		if (![db open]) {
-			[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
-		}
-		
-		[db executeUpdate:@"UPDATE post SET IsHidden=1 WHERE Received < ? AND IsStarred=0", [NSNumber numberWithInteger:olderThan]];
-		
-		[db close];
+		[self runDatabaseUpdateOnBackgroundThread:@"UPDATE post SET IsHidden=1 WHERE Received < ? AND IsStarred=0", [NSNumber numberWithInteger:olderThan], nil];
 	}
 }
 
@@ -3652,12 +3612,6 @@ static NSArray *preferencesToolbarItems;
 		}
 	}
 	
-	FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
-	
-	if (![db open]) {
-		[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
-	}
-	
 	NSNumber *folderId = nil;
 	
 	if (folder != nil) {
@@ -3665,9 +3619,9 @@ static NSArray *preferencesToolbarItems;
 	}
 	
 	if ([item isKindOfClass:[CLSourceListFeed class]]) {
-		[db executeUpdate:@"UPDATE feed SET FolderId=? WHERE Id=?", folderId, [NSNumber numberWithInteger:[(CLSourceListFeed *)item dbId]]];
+		[self runDatabaseUpdateOnBackgroundThread:@"UPDATE feed SET FolderId=? WHERE Id=?", folderId, [NSNumber numberWithInteger:[(CLSourceListFeed *)item dbId]], nil];
 	} else if ([item isKindOfClass:[CLSourceListFolder class]]) {
-		[db executeUpdate:@"UPDATE folder SET ParentId=? WHERE Id=?", folderId, [NSNumber numberWithInteger:[(CLSourceListFolder *)item dbId]]];
+		[self runDatabaseUpdateOnBackgroundThread:@"UPDATE folder SET ParentId=? WHERE Id=?", folderId, [NSNumber numberWithInteger:[(CLSourceListFolder *)item dbId]], nil];
 		
 		// update the path for this item and any descendents
 		NSString *oldPath = [(CLSourceListFolder *)item path];
@@ -3681,12 +3635,10 @@ static NSArray *preferencesToolbarItems;
 		
 		NSString *query = [NSString stringWithFormat:@"UPDATE folder SET Path=REPLACE(Path, '%@', '%@') WHERE Path LIKE '%@%%'", oldPath, newPath, oldPath];
 		
-		[db executeUpdate:query];
+		[self runDatabaseUpdateOnBackgroundThread:query, nil];
 		
 		[(CLSourceListFolder *)item setPath:newPath];
 	}
-	
-	[db close];
 	
 	// update ui
 	CLSourceListFolder *ancestor = nil;
@@ -3754,15 +3706,8 @@ static NSArray *preferencesToolbarItems;
 }
 
 - (void)addStarToPost:(CLPost *)post propagateChangesToGoogle:(BOOL)propagate {
-	FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 	
-	if (![db open]) {
-		[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
-	}
-	
-	[db executeUpdate:@"UPDATE post SET IsStarred=1 WHERE Id=?", [NSNumber numberWithInteger:[post dbId]]];
-	
-	[db close];
+	[self runDatabaseUpdateOnBackgroundThread:@"UPDATE post SET IsStarred=1 WHERE Id=?", [NSNumber numberWithInteger:[post dbId]], nil];
 	
 	[post setIsStarred:YES];
 	
@@ -3831,7 +3776,7 @@ static NSArray *preferencesToolbarItems;
 		[db commit];
 		
 	} else {
-		[db executeUpdate:@"UPDATE post SET IsStarred=0 WHERE Id=?", [NSNumber numberWithInteger:[post dbId]]];
+		[self runDatabaseUpdateOnBackgroundThread:@"UPDATE post SET IsStarred=0 WHERE Id=?", [NSNumber numberWithInteger:[post dbId]], nil];
 	}
 	
 	[db close];
