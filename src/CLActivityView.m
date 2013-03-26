@@ -8,14 +8,12 @@
 
 #import "CLActivityView.h"
 #import "CLConstants.h"
-#import "CLGoogleFeedOperation.h"
 #import "CLSourceListFeed.h"
 #import "CLOperation.h"
 
 @implementation CLActivityView
 
 @synthesize feeds;
-@synthesize googleFeeds;
 @synthesize spinner1;
 @synthesize spinner2;
 
@@ -50,7 +48,6 @@
 	[spinner2 removeFromSuperviewWithoutNeedingDisplay];
 	
 	[feeds release];
-	[googleFeeds release];
 	
 	[super dealloc];
 }
@@ -90,7 +87,6 @@
 	
 	NSInteger rowCount = 2;
 	NSMutableArray *allFeeds = [NSMutableArray arrayWithArray:feeds];
-	[allFeeds addObjectsFromArray:googleFeeds];
 	NSInteger feedCount = [allFeeds count];
 	NSInteger iterationCount = 0;
 	NSInteger displayCount = 0;

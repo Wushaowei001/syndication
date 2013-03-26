@@ -67,7 +67,7 @@
 	if (faviconurl != nil && [[faviconurl host] length] > 0) {
 		
 		faviconPath = [NSString stringWithFormat:@"http://%@/favicon.ico", [faviconurl host]];
-		faviconData = [CLUrlFetcher fetchUrlString:faviconPath postData:nil usingAuth:nil returnNilOnFailure:YES urlResponse:&faviconUrlResponse];
+		faviconData = [CLUrlFetcher fetchUrlString:faviconPath postData:nil returnNilOnFailure:YES urlResponse:&faviconUrlResponse];
 		
 		if (faviconData != nil) {
 			faviconImage = [[[NSImage alloc] initWithDataIgnoringOrientation:faviconData] autorelease];
@@ -79,11 +79,11 @@
 			// check for a subdomain
 			NSArray *hostParts = [fullHost componentsSeparatedByString:@"."];
 			
-			// we want to match something like mail.google.com and not things like johnsmith.co.uk
+			// we want to match something like mail.foobar.com and not things like johnsmith.co.uk
 			if ([hostParts count] > 2 && [[hostParts objectAtIndex:1] length] > 2) {
 				NSString *newHost = [NSString stringWithFormat:@"%@.%@", [hostParts objectAtIndex:1], [hostParts objectAtIndex:2]];
 				faviconPath = [NSString stringWithFormat:@"http://%@/favicon.ico", newHost];
-				faviconData = [CLUrlFetcher fetchUrlString:faviconPath postData:nil usingAuth:nil returnNilOnFailure:YES urlResponse:&faviconUrlResponse];
+				faviconData = [CLUrlFetcher fetchUrlString:faviconPath postData:nil returnNilOnFailure:YES urlResponse:&faviconUrlResponse];
 				
 				if (faviconData != nil) {
 					faviconImage = [[[NSImage alloc] initWithDataIgnoringOrientation:faviconData] autorelease];

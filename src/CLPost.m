@@ -37,14 +37,6 @@
 	return self;
 }
 
-- (id)initWithJSON:(NSDictionary *)json {
-	self = [self init];
-	if (self != nil) {
-		[self populateUsingJSON:json];
-	}
-	return self;
-}
-
 // note, this doesn't load enclosures
 - (id)initWithResultSet:(FMResultSet *)rs {
 	self = [self init];
@@ -68,82 +60,6 @@
 	[enclosures release];
 	
 	[super dealloc];
-}
-
-- (void)populateUsingJSON:(NSDictionary *)json {
-	[self setTitle:[json objectForKey:@"title"]];
-	
-	if (title != nil) {
-		[self setTitle:[title gtm_stringByUnescapingFromHTML]];
-	}
-	
-	NSDictionary *contentDict = [json objectForKey:@"content"];
-	NSString *itemContent = nil;
-	
-	if (contentDict != nil) {
-		itemContent = [contentDict objectForKey:@"content"];
-	}
-	
-	// use "summary" if "content" not available
-	if (itemContent == nil) {
-		NSDictionary *summary = [json objectForKey:@"summary"];
-		
-		if (summary != nil) {
-			itemContent = [summary objectForKey:@"content"];
-		}
-	}
-	
-	[self setContent:itemContent];
-	
-	if (itemContent != nil) {
-		[self setPlainTextContent:[CLHTMLFilter extractPlainTextFromString:itemContent]];
-	}
-	
-	[self setGuid:[json objectForKey:@"id"]];
-	NSArray *alternate = [json objectForKey:@"alternate"];
-	
-	if ([alternate count] > 0) {
-		[self setLink:[[alternate objectAtIndex:0] objectForKey:@"href"]];
-	}
-	
-	[self setAuthor:[json objectForKey:@"author"]];
-	
-	if (author != nil) {
-		[self setAuthor:[author gtm_stringByUnescapingFromHTML]];
-	}
-	
-	NSNumber *itemPublishedNumber = [json objectForKey:@"crawlTimeMsec"];
-	
-	if (itemPublishedNumber != nil) {
-		NSTimeInterval itemPublishedInterval = ([itemPublishedNumber doubleValue] / 1000.0);
-		[self setPublished:[NSDate dateWithTimeIntervalSince1970:itemPublishedInterval]];
-	}
-	
-	NSArray *categories = [json objectForKey:@"categories"];
-	[self setIsRead:NO];
-	
-	if ([categories count] > 0) {
-		for (NSString *category in categories) {
-			if ([category hasSuffix:@"state/com.google/read"]) {
-				[self setIsRead:YES];
-			}
-		}
-	}
-	
-	NSNumber *isReadStateLocked = [json objectForKey:@"isReadStateLocked"];
-	
-	if (isReadStateLocked != nil && [isReadStateLocked boolValue] == YES) {
-		[self setIsRead:YES];
-	}
-	
-	NSArray *enclosureArray = [json objectForKey:@"enclosure"];
-	
-	if ([enclosureArray count] > 0) {
-		for (NSDictionary *enclosure in enclosureArray) {
-			NSString *enclosureUrl = [enclosure objectForKey:@"href"];
-			[enclosures addObject:enclosureUrl];
-		}
-	}
 }
 
 - (void)populateUsingResultSet:(FMResultSet *)rs {

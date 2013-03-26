@@ -16,18 +16,6 @@
 #import "CLFeedParserOperation.h"
 #import "CLFeedRequest.h"
 #import "CLFeedSheetController.h"
-#import "CLGoogleAddFeedOperation.h"
-#import "CLGoogleAddStarOperation.h"
-#import "CLGoogleAddToFolderOperation.h"
-#import "CLGoogleDeleteFeedOperation.h"
-#import "CLGoogleFeedOperation.h"
-#import "CLGoogleFeedTitleOperation.h"
-#import "CLGoogleMarkReadOperation.h"
-#import "CLGoogleOperation.h"
-#import "CLGoogleRemoveFromFolderOperation.h"
-#import "CLGoogleRemoveStarOperation.h"
-#import "CLGoogleStarredOperation.h"
-#import "CLGoogleSyncOperation.h"
 #import "CLHTMLFilter.h"
 #import "CLIconRefreshOperation.h"
 #import "CLKeychainHelper.h"
@@ -61,10 +49,8 @@
 #define ICON_REFRESH_INTERVAL TIME_INTERVAL_MONTH
 #define PREFERENCES_TOOLBAR_GENERAL_ITEM @"ToolbarItemGeneral"
 #define PREFERENCES_TOOLBAR_FONTS_ITEM @"ToolbarItemFonts"
-#define PREFERENCES_TOOLBAR_ADVANCED_ITEM @"ToolbarItemAdvanced"
 #define PREFERENCES_TOOLBAR_GENERAL_HEIGHT 216 // note: the height of the window in the nib file has to be the same as this
 #define PREFERENCES_TOOLBAR_FONTS_HEIGHT 100
-#define PREFERENCES_TOOLBAR_ADVANCED_HEIGHT 95
 #define PREFERENCES_CHECK_FOR_NEW_ARTICLES_KEY @"checkForNewArticles"
 #define PREFERENCES_REMOVE_ARTICLES_KEY @"removeArticles"
 #define PREFERENCES_MARK_ARTICLES_AS_READ_KEY @"markArticlesAsRead"
@@ -88,11 +74,7 @@ static NSArray *preferencesToolbarItems;
 @synthesize requestInProgress;
 @synthesize activeRequestType;
 @synthesize iconRefreshTimers;
-@synthesize googleOperationQueue;
-@synthesize googleStuckOperation;
-@synthesize googleAuth;
 @synthesize activityViewFeeds;
-@synthesize activityViewGoogleFeeds;
 @synthesize windowControllers;
 @synthesize subscriptionsMenu;
 @synthesize totalUnread;
@@ -111,12 +93,6 @@ static NSArray *preferencesToolbarItems;
 @synthesize preferencesBodyTextField;
 @synthesize preferenceBodyFontName;
 @synthesize preferenceBodyFontSize;
-@synthesize preferencesGoogleSyncTextField;
-@synthesize googleSyncWindow;
-@synthesize googleSyncEmailTextField;
-@synthesize googleSyncPasswordTextField;
-@synthesize welcomeWindow;
-@synthesize showingWelcomeWindow;
 @synthesize isFirstWindow;
 @synthesize opmlLoadingWindow;
 @synthesize opmlLoadingProgressIndicator;
@@ -127,7 +103,7 @@ static NSArray *preferencesToolbarItems;
 
 + (void)initialize {
 	timelineUnreadItemsDict = [[NSMutableDictionary alloc] init];
-	preferencesToolbarItems = [[NSArray arrayWithObjects:PREFERENCES_TOOLBAR_GENERAL_ITEM, PREFERENCES_TOOLBAR_FONTS_ITEM, PREFERENCES_TOOLBAR_ADVANCED_ITEM, nil] retain];
+	preferencesToolbarItems = [[NSArray arrayWithObjects:PREFERENCES_TOOLBAR_GENERAL_ITEM, PREFERENCES_TOOLBAR_FONTS_ITEM, nil] retain];
 }
 
 + (BOOL)isSourceListItem:(CLSourceListItem *)item descendentOf:(CLSourceListItem *)parent {
@@ -287,15 +263,11 @@ static NSArray *preferencesToolbarItems;
 		[self setRequestQueue:[NSMutableArray array]];
 		[self setRequestInProgress:NO];
 		[self setIconRefreshTimers:[NSMutableArray array]];
-		[self setGoogleOperationQueue:[[[NSOperationQueue alloc] init] autorelease]];
-		[googleOperationQueue setMaxConcurrentOperationCount:1]; // currently must be 1
 		[self setActivityViewFeeds:[NSMutableArray array]];
-		[self setActivityViewGoogleFeeds:[NSMutableArray array]];
 		[self setPreferenceCheckForNewArticles:-1];
 		[self setPreferenceRemoveArticles:-1];
 		[self setPreferenceMarkArticlesAsRead:-1];
 		[self setPreferenceDisplayUnreadCountInDock:NO];
-		[self setShowingWelcomeWindow:NO];
 		[self setIsFirstWindow:YES];
 	}
 	
@@ -307,7 +279,6 @@ static NSArray *preferencesToolbarItems;
 	[[NSNotificationCenter defaultCenter] removeObserver:self];
 	
 	[operationQueue cancelAllOperations];
-	[googleOperationQueue cancelAllOperations];
 	
 	if ([feedSyncTimer isValid]) {
 		[feedSyncTimer invalidate];
@@ -327,11 +298,7 @@ static NSArray *preferencesToolbarItems;
 	[feedRequests release];
 	[requestQueue release];
 	[iconRefreshTimers release];
-	[googleOperationQueue release];
-	[googleStuckOperation release];
-	[googleAuth release];
 	[activityViewFeeds release];
-	[activityViewGoogleFeeds release];
 	[windowControllers release];
 	[preferencesWindow release]; // release top level object of preferences nib file
 	[windowForUpdate release];
@@ -421,9 +388,7 @@ static NSArray *preferencesToolbarItems;
 	
 	[self setWindowControllers:[NSMutableArray array]];
 	
-	if (showingWelcomeWindow == NO) {
-		[self newWindow];
-	}
+	[self newWindow];
 	
 	[self updateSubscriptionsMenu];
 	
@@ -435,9 +400,9 @@ static NSArray *preferencesToolbarItems;
 		[alert setAlertStyle:NSInformationalAlertStyle];
 		
 		if ([alert runModal] == NSAlertFirstButtonReturn) {
-			[self addSubscriptionForUrlString:@"http://creativecommons.org/weblog/feed/rss" withTitle:@"Creative Commons" toFolder:nil isFromGoogle:NO propagateChangesToGoogle:NO refreshImmediately:NO];
-			[self addSubscriptionForUrlString:@"http://blog.flickr.net/en/feed/atom/" withTitle:@"Flickr Blog" toFolder:nil isFromGoogle:NO propagateChangesToGoogle:NO refreshImmediately:NO];
-			[self addSubscriptionForUrlString:@"http://blog.makezine.com/index.xml" withTitle:@"Make:" toFolder:nil isFromGoogle:NO propagateChangesToGoogle:NO refreshImmediately:NO];
+			[self addSubscriptionForUrlString:@"http://creativecommons.org/weblog/feed/rss" withTitle:@"Creative Commons" toFolder:nil refreshImmediately:NO];
+			[self addSubscriptionForUrlString:@"http://blog.flickr.net/en/feed/atom/" withTitle:@"Flickr Blog" toFolder:nil refreshImmediately:NO];
+			[self addSubscriptionForUrlString:@"http://blog.makezine.com/index.xml" withTitle:@"Make:" toFolder:nil refreshImmediately:NO];
 		}
 	}
 	
@@ -449,10 +414,8 @@ static NSArray *preferencesToolbarItems;
 	
 	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(defaultsChanged:) name:NSUserDefaultsDidChangeNotification object:nil];
 	
-	[self requeueGoogleOperationsInDb];
-	
 	if (feedEventString != nil) {
-		[self addSubscriptionForUrlString:feedEventString withTitle:nil toFolder:nil isFromGoogle:NO propagateChangesToGoogle:NO refreshImmediately:YES];
+		[self addSubscriptionForUrlString:feedEventString withTitle:nil toFolder:nil refreshImmediately:YES];
 		[self setFeedEventString:nil];
 	}
 	
@@ -493,8 +456,6 @@ static NSArray *preferencesToolbarItems;
 
 - (void)loadFromDatabase {
 	
-	NSString *previousVersion = [SyndicationAppDelegate miscellaneousValueForKey:MISCELLANEOUS_DATABASE_VERSION];
-	
 	FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 	
 	if (![db open]) {
@@ -508,15 +469,11 @@ static NSArray *preferencesToolbarItems;
 	}
 	
 	if ([self tableExists:@"feed" inDb:db] == NO) {
-		[db executeUpdate:@"CREATE TABLE feed (Id INTEGER PRIMARY KEY, FolderId INTEGER, Url TEXT, Title TEXT, Icon BLOB, LastRefreshed REAL, IconLastRefreshed REAL, IsFromGoogle INTEGER NOT NULL DEFAULT 0, GoogleUrl TEXT, GoogleNewestItemTimestamp INTEGER NOT NULL DEFAULT 0, WebsiteLink TEXT, IsHidden INTEGER NOT NULL DEFAULT 0, UnreadCount INTEGER NOT NULL DEFAULT 0, LastSyncPosts BLOB, GoogleUnreadGuids BLOB)"];
+		[db executeUpdate:@"CREATE TABLE feed (Id INTEGER PRIMARY KEY, FolderId INTEGER, Url TEXT, Title TEXT, Icon BLOB, LastRefreshed REAL, IconLastRefreshed REAL, WebsiteLink TEXT, IsHidden INTEGER NOT NULL DEFAULT 0, UnreadCount INTEGER NOT NULL DEFAULT 0, LastSyncPosts BLOB)"];
 	}
 	
 	if ([self tableExists:@"folder" inDb:db] == NO) {
 		[db executeUpdate:@"CREATE TABLE folder (Id INTEGER PRIMARY KEY, ParentId INTEGER, Path TEXT, Title TEXT)"];
-	}
-	
-	if ([self tableExists:@"googleOperations" inDb:db] == NO) {
-		[db executeUpdate:@"CREATE TABLE googleOperations (Id INTEGER PRIMARY KEY, Type INTEGER, GoogleUrl TEXT, Title TEXT, Guid TEXT, Folder TEXT)"];
 	}
 	
 	if ([self tableExists:@"miscellaneous" inDb:db] == NO) {
@@ -525,50 +482,6 @@ static NSArray *preferencesToolbarItems;
 	
 	if ([self tableExists:@"post" inDb:db] == NO) {
 		[db executeUpdate:@"CREATE TABLE post (Id INTEGER PRIMARY KEY, FeedId INTEGER, Guid TEXT, Title TEXT, Link TEXT, Published INTEGER, Received INTEGER, Author TEXT, Content TEXT, PlainTextContent TEXT, IsRead INTEGER NOT NULL DEFAULT 0, HasEnclosures INTEGER NOT NULL DEFAULT 0, IsHidden INTEGER NOT NULL DEFAULT 0, IsStarred INTEGER NOT NULL DEFAULT 0)"];
-	}
-	
-	if (previousVersion != nil) {
-		if ([previousVersion isEqual:@"0.1.1"]) {
-			[db executeUpdate:@"ALTER TABLE post ADD COLUMN IsHidden INTEGER NOT NULL DEFAULT 0"];
-		}
-		
-		if ([previousVersion isEqual:@"0.1.1"] || [previousVersion isEqual:@"0.1.2"]) {
-			[db executeUpdate:@"ALTER TABLE post ADD COLUMN IsStarred INTEGER NOT NULL DEFAULT 0"];
-			[db executeUpdate:@"ALTER TABLE feed ADD COLUMN IsHidden INTEGER NOT NULL DEFAULT 0"];
-			[db executeUpdate:@"ALTER TABLE feed ADD COLUMN UnreadCount INTEGER NOT NULL DEFAULT 0"];
-			[db executeUpdate:@"UPDATE feed SET UnreadCount = (SELECT COUNT(post.Id) FROM post WHERE post.FeedId=feed.Id AND post.IsRead=0 AND post.IsHidden=0)"];
-		}
-		
-		if ([previousVersion isEqual:@"0.1.1"] || [previousVersion isEqual:@"0.1.2"] || [previousVersion isEqual:@"0.1.3"]) {
-			[db executeUpdate:@"ALTER TABLE feed ADD COLUMN LastSyncPosts BLOB"];
-			
-			NSData *syncPostsData = [NSArchiver archivedDataWithRootObject:[NSMutableArray array]];
-			[db executeUpdate:@"UPDATE feed SET LastSyncPosts=? WHERE IsFromGoogle=0", syncPostsData];
-			
-			[db executeUpdate:@"ALTER TABLE feed ADD COLUMN GoogleUnreadGuids BLOB"];
-			
-			FMResultSet *rs = [db executeQuery:@"SELECT Id FROM feed WHERE IsFromGoogle=1"];
-			
-			while ([rs next]) {
-				NSNumber *dbId = [NSNumber numberWithInteger:[rs longForColumn:@"Id"]];
-				NSMutableSet *googleUnreadGuids = [[NSMutableSet alloc] init];
-				
-				FMResultSet *rs2 = [db executeQuery:@"SELECT Guid FROM post WHERE FeedId=? AND IsRead=0", dbId];
-				
-				while ([rs2 next]) {
-					[googleUnreadGuids addObject:[rs2 stringForColumn:@"Guid"]];
-				}
-				
-				[rs2 close];
-				
-				NSData *googleUnreadGuidsData = [NSArchiver archivedDataWithRootObject:googleUnreadGuids];
-				[db executeUpdate:@"UPDATE feed SET GoogleUnreadGuids=? WHERE Id=?", googleUnreadGuidsData, dbId];
-				
-				[googleUnreadGuids release];
-			}
-			
-			[rs close];
-		}
 	}
 	
 	[self recursivelyLoadChildrenOf:nil usingDatabaseHandle:db];
@@ -696,74 +609,14 @@ static NSArray *preferencesToolbarItems;
 	}
 }
 
-- (NSMutableArray *)extractNonGoogleFeedsFrom:(NSArray *)items {
-	NSMutableArray *feeds = [NSMutableArray array];
-	
-	for (CLSourceListItem *item in items) {
-		if ([item isKindOfClass:[CLSourceListFeed class]]) {
-			if ([(CLSourceListFeed *)item isFromGoogle] == NO) {
-				[feeds addObject:item];
-			}
-		} else {
-			[feeds addObjectsFromArray:[self extractNonGoogleFeedsFrom:[item children]]];
-		}
-	}
-	
-	return feeds;
-}
-
-- (NSMutableArray *)extractGoogleFeedsFrom:(NSArray *)items {
-	NSMutableArray *feeds = [NSMutableArray array];
-	
-	for (CLSourceListItem *item in items) {
-		if ([item isKindOfClass:[CLSourceListFeed class]]) {
-			if ([(CLSourceListFeed *)item isFromGoogle]) {
-				[feeds addObject:item];
-			}
-		} else {
-			[feeds addObjectsFromArray:[self extractGoogleFeedsFrom:[item children]]];
-		}
-	}
-	
-	return feeds;
-}
-
-- (void)queueNonGoogleSyncRequest {
+- (void)queueAllFeedsSyncRequest {
 	CLRequest *request = [[CLRequest alloc] init];
-	[request setRequestType:CLRequestNonGoogleSync];
+	[request setRequestType:CLRequestAllFeedsSync];
 	
 	[requestQueue addObject:request];
 	[request release];
 	
 	[self startRequestIfNoneInProgress];
-}
-
-- (void)queueGoogleSyncRequest {
-	NSString *email = [SyndicationAppDelegate miscellaneousValueForKey:MISCELLANEOUS_GOOGLE_EMAIL_KEY];
-
-	if (email != nil) {
-		CLRequest *request = [[CLRequest alloc] init];
-		[request setRequestType:CLRequestGoogleSync];
-		
-		[requestQueue addObject:request];
-		[request release];
-		
-		[self startRequestIfNoneInProgress];
-	}
-}
-
-- (void)queueGoogleStarredSyncRequest {
-	NSString *email = [SyndicationAppDelegate miscellaneousValueForKey:MISCELLANEOUS_GOOGLE_EMAIL_KEY];
-	
-	if (email != nil) {
-		CLRequest *request = [[CLRequest alloc] init];
-		[request setRequestType:CLRequestGoogleStarredSync];
-		
-		[requestQueue addObject:request];
-		[request release];
-		
-		[self startRequestIfNoneInProgress];
-	}
 }
 
 - (void)queueSyncRequestForSpecificFeeds:(NSMutableArray *)feeds {
@@ -775,18 +628,6 @@ static NSArray *preferencesToolbarItems;
 	CLRequest *request = [[CLRequest alloc] init];
 	[request setRequestType:CLRequestSpecificFeedsSync];
 	[request setSpecificFeeds:feeds];
-	
-	[requestQueue addObject:request];
-	[request release];
-	
-	[self startRequestIfNoneInProgress];
-}
-
-- (void)queueSyncRequestForGoogleSingleFeed:(CLSourceListFeed *)feed {
-	
-	CLRequest *request = [[CLRequest alloc] init];
-	[request setRequestType:CLRequestGoogleSingleFeedSync];
-	[request setSingleFeed:feed];
 	
 	[requestQueue addObject:request];
 	[request release];
@@ -806,7 +647,7 @@ static NSArray *preferencesToolbarItems;
 }
 
 - (void)startRequestIfNoneInProgress {
-	if ([feedRequests count] == 0 && [feedsToSync count] == 0 && [operationQueue operationCount] == 0 && [googleOperationQueue operationCount] == 0) {
+	if ([feedRequests count] == 0 && [feedsToSync count] == 0 && [operationQueue operationCount] == 0) {
 		[self setRequestInProgress:NO];
 		[self setNumberOfActiveParseOps:0];
 	}
@@ -816,63 +657,23 @@ static NSArray *preferencesToolbarItems;
 		CLRequest *request = [[[requestQueue objectAtIndex:0] retain] autorelease];
 		[requestQueue removeObjectAtIndex:0];
 		
-		if ([request requestType] == CLRequestNonGoogleSync) {
+		if ([request requestType] == CLRequestAllFeedsSync) {
 			NSInteger timestamp = (NSInteger)[[NSDate date] timeIntervalSince1970];
 			NSString *timestampString = [[NSNumber numberWithInteger:timestamp] stringValue];
 			[SyndicationAppDelegate miscellaneousSetValue:timestampString forKey:MISCELLANEOUS_LAST_FEED_SYNC_KEY];
 			
-			NSMutableArray *nonGoogleFeeds = [self extractNonGoogleFeedsFrom:subscriptionList];
-			
-			if ([nonGoogleFeeds count] > 0) {
-				[feedsToSync addObjectsFromArray:nonGoogleFeeds];
+			if ([subscriptionList count] > 0) {
+				[feedsToSync addObjectsFromArray:subscriptionList];
 				[self startFeedRequests];
 				
 				[self setRequestInProgress:YES];
 				[self setActiveRequestType:[request requestType]];
 			}
 			
-		} else if ([request requestType] == CLRequestGoogleSync) {
-			
-			[self queueGoogleSyncOperation];
-			
-			[self setRequestInProgress:YES];
-			[self setActiveRequestType:[request requestType]];
-			
-		} else if ([request requestType] == CLRequestGoogleStarredSync) {
-			
-			[self queueGoogleStarredOperation];
-			
-			[self setRequestInProgress:YES];
-			[self setActiveRequestType:[request requestType]];
-			
 		} else if ([request requestType] == CLRequestSpecificFeedsSync) {
 			
 			[feedsToSync addObjectsFromArray:[request specificFeeds]];
 			[self startFeedRequests];
-			
-			[self setRequestInProgress:YES];
-			[self setActiveRequestType:[request requestType]];
-			
-		} else if ([request requestType] == CLRequestGoogleSingleFeedSync) {
-			
-			NSInteger dbNewestItemTimestamp = 0;
-			
-			FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
-			
-			if (![db open]) {
-				[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
-			}
-			
-			FMResultSet *rs = [db executeQuery:@"SELECT GoogleNewestItemTimestamp FROM feed WHERE Id=?", [NSNumber numberWithInteger:[[request singleFeed] dbId]]];
-			
-			if ([rs next]) {
-				dbNewestItemTimestamp = [rs longForColumn:@"GoogleNewestItemTimestamp"];
-			}
-			
-			[rs close];
-			[db close];
-			
-			[self queueGoogleFeedOperationFor:[request singleFeed] timestamp:dbNewestItemTimestamp unreadCount:10000];
 			
 			[self setRequestInProgress:YES];
 			[self setActiveRequestType:[request requestType]];
@@ -952,327 +753,11 @@ static NSArray *preferencesToolbarItems;
 
 - (void)queueDeleteHiddenOperation {
 	CLDeleteHiddenOperation *deleteOp = [[CLDeleteHiddenOperation alloc] init];
-	[deleteOp setNonGoogleFeeds:[self extractNonGoogleFeedsFrom:subscriptionList]];
-	[deleteOp setGoogleFeeds:[self extractGoogleFeedsFrom:subscriptionList]];
+	[deleteOp setFeeds:subscriptionList];
 	[deleteOp setDelegate:self];
 	
 	[operationQueue addOperation:deleteOp];
 	[deleteOp release];
-}
-
-- (void)queueGoogleSyncOperation {
-	CLGoogleSyncOperation *syncOp = [[CLGoogleSyncOperation alloc] init];
-	[syncOp setDelegate:self];
-	[syncOp setGoogleAuth:googleAuth];
-	
-	[googleOperationQueue addOperation:syncOp];
-	[syncOp release];
-}
-
-- (void)queueGoogleFeedOperationFor:(CLSourceListFeed *)feed timestamp:(NSInteger)timestamp unreadCount:(NSInteger)unreadCount {
-	CLGoogleFeedOperation *feedOp = [[CLGoogleFeedOperation alloc] init];
-	[feedOp setDelegate:self];
-	[feedOp setFeed:feed];
-	[feedOp setDbNewestItemTimestamp:timestamp];
-	[feedOp setExpectedNumberOfUnreadItems:unreadCount];
-	[feedOp setGoogleAuth:googleAuth];
-	
-	[googleOperationQueue addOperation:feedOp];
-	[feedOp release];
-}
-
-- (void)queueGoogleAddFeedForGoogleUrl:(NSString *)googleUrl addToDb:(BOOL)addToDb {
-	CLGoogleAddFeedOperation *addFeedOp = [[CLGoogleAddFeedOperation alloc] init];
-	[addFeedOp setDelegate:self];
-	[addFeedOp setFeedGoogleUrl:googleUrl];
-	[addFeedOp setGoogleAuth:googleAuth];
-	
-	[googleOperationQueue addOperation:addFeedOp];
-	
-	if (addToDb) {
-		[self addGoogleOperationToDb:addFeedOp];
-	}
-	
-	[addFeedOp release];
-}
-
-- (void)queueGoogleDeleteFeedForGoogleUrl:(NSString *)googleUrl addToDb:(BOOL)addToDb {
-	CLGoogleDeleteFeedOperation *deleteFeedOp = [[CLGoogleDeleteFeedOperation alloc] init];
-	[deleteFeedOp setDelegate:self];
-	[deleteFeedOp setFeedGoogleUrl:googleUrl];
-	[deleteFeedOp setGoogleAuth:googleAuth];
-	
-	[googleOperationQueue addOperation:deleteFeedOp];
-	
-	if (addToDb) {
-		[self addGoogleOperationToDb:deleteFeedOp];
-	}
-	
-	[deleteFeedOp release];
-}
-
-- (void)queueGoogleFeedTitleOperationFor:(NSString *)googleUrl feedTitle:(NSString *)feedTitle addToDb:(BOOL)addToDb {
-	
-	// cancel any active operations of the same type
-	NSArray *operationList = [googleOperationQueue operations];
-	
-	for (NSOperation *operation in operationList) {
-		
-		if ([operation isKindOfClass:[CLGoogleFeedTitleOperation class]]) {
-			NSString *operationGoogleUrl = [(CLGoogleFeedTitleOperation *)operation feedGoogleUrl];
-			
-			if ([operationGoogleUrl isEqual:googleUrl]) {
-				[operation cancel];
-			}
-		}
-	}
-	
-	// remove ops from db of the same type
-	FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
-	
-	if (![db open]) {
-		[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
-	}
-	
-	[db executeUpdate:@"DELETE FROM googleOperations WHERE Type=? AND GoogleUrl=?", [NSNumber numberWithInteger:CLFeedTitleType], googleUrl];
-	
-	[db close];
-	
-	// then actually create the new op
-	CLGoogleFeedTitleOperation *feedTitleOp = [[CLGoogleFeedTitleOperation alloc] init];
-	[feedTitleOp setDelegate:self];
-	[feedTitleOp setFeedGoogleUrl:googleUrl];
-	[feedTitleOp setFeedTitle:feedTitle];
-	[feedTitleOp setGoogleAuth:googleAuth];
-	
-	[googleOperationQueue addOperation:feedTitleOp];
-	
-	if (addToDb) {
-		[self addGoogleOperationToDb:feedTitleOp];
-	}
-	
-	[feedTitleOp release];
-}
-
-- (void)queueGoogleMarkReadOperationForGoogleUrl:(NSString *)googleUrl itemGuid:(NSString *)itemGuid addToDb:(BOOL)addToDb {
-	CLGoogleMarkReadOperation *markReadOp = [[CLGoogleMarkReadOperation alloc] init];
-	[markReadOp setDelegate:self];
-	[markReadOp setFeedGoogleUrl:googleUrl];
-	[markReadOp setItemGuid:itemGuid];
-	[markReadOp setGoogleAuth:googleAuth];
-	
-	[googleOperationQueue addOperation:markReadOp];
-	
-	if (addToDb) {
-		[self addGoogleOperationToDb:markReadOp];
-	}
-	
-	[markReadOp release];
-}
-
-- (void)queueGoogleAddToFolderOperationForGoogleUrl:(NSString *)googleUrl folder:(NSString *)folder addToDb:(BOOL)addToDb {
-	
-	[self cancelGoogleActivityOfType:CLAddToFolderType forGoogleUrl:googleUrl itemGuid:nil folder:folder];
-	
-	CLGoogleAddToFolderOperation *folderOp = [[CLGoogleAddToFolderOperation alloc] init];
-	[folderOp setDelegate:self];
-	[folderOp setFeedGoogleUrl:googleUrl];
-	[folderOp setFolder:folder];
-	[folderOp setGoogleAuth:googleAuth];
-	
-	[googleOperationQueue addOperation:folderOp];
-	
-	if (addToDb) {
-		[self addGoogleOperationToDb:folderOp];
-	}
-	
-	[folderOp release];
-}
-
-- (void)queueGoogleRemoveFromFolderOperationForGoogleUrl:(NSString *)googleUrl folder:(NSString *)folder addToDb:(BOOL)addToDb {
-	CLGoogleRemoveFromFolderOperation *folderOp = [[CLGoogleRemoveFromFolderOperation alloc] init];
-	[folderOp setDelegate:self];
-	[folderOp setFeedGoogleUrl:googleUrl];
-	[folderOp setFolder:folder];
-	[folderOp setGoogleAuth:googleAuth];
-	
-	[googleOperationQueue addOperation:folderOp];
-	
-	if (addToDb) {
-		[self addGoogleOperationToDb:folderOp];
-	}
-	
-	[folderOp release];
-}
-
-- (void)queueGoogleAddStarOperationForGoogleUrl:(NSString *)googleUrl itemGuid:(NSString *)itemGuid addToDb:(BOOL)addToDb {
-	
-	[self cancelGoogleActivityOfType:CLAddStarType forGoogleUrl:googleUrl itemGuid:itemGuid folder:nil];
-	[self cancelGoogleActivityOfType:CLRemoveStarType forGoogleUrl:googleUrl itemGuid:itemGuid folder:nil];
-	
-	CLGoogleAddStarOperation *addStarOp = [[CLGoogleAddStarOperation alloc] init];
-	[addStarOp setDelegate:self];
-	[addStarOp setFeedGoogleUrl:googleUrl];
-	[addStarOp setItemGuid:itemGuid];
-	[addStarOp setGoogleAuth:googleAuth];
-	
-	[googleOperationQueue addOperation:addStarOp];
-	
-	if (addToDb) {
-		[self addGoogleOperationToDb:addStarOp];
-	}
-	
-	[addStarOp release];
-}
-
-- (void)queueGoogleRemoveStarOperationForGoogleUrl:(NSString *)googleUrl itemGuid:(NSString *)itemGuid addToDb:(BOOL)addToDb {
-	
-	[self cancelGoogleActivityOfType:CLAddStarType forGoogleUrl:googleUrl itemGuid:itemGuid folder:nil];
-	[self cancelGoogleActivityOfType:CLRemoveStarType forGoogleUrl:googleUrl itemGuid:itemGuid folder:nil];
-	
-	CLGoogleRemoveStarOperation *removeStarOp = [[CLGoogleRemoveStarOperation alloc] init];
-	[removeStarOp setDelegate:self];
-	[removeStarOp setFeedGoogleUrl:googleUrl];
-	[removeStarOp setItemGuid:itemGuid];
-	[removeStarOp setGoogleAuth:googleAuth];
-	
-	[googleOperationQueue addOperation:removeStarOp];
-	
-	if (addToDb) {
-		[self addGoogleOperationToDb:removeStarOp];
-	}
-	
-	[removeStarOp release];
-}
-
-- (void)queueGoogleStarredOperation {
-	CLGoogleStarredOperation *starredOp = [[CLGoogleStarredOperation alloc] init];
-	[starredOp setDelegate:self];
-	[starredOp setGoogleAuth:googleAuth];
-	
-	[googleOperationQueue addOperation:starredOp];
-	[starredOp release];
-}
-
-- (void)addGoogleOperationToDb:(CLGoogleOperation *)googleOp {
-	FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
-	
-	if (![db open]) {
-		[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
-	}
-	
-	if ([googleOp isKindOfClass:[CLGoogleAddFeedOperation class]]) {
-		CLGoogleAddFeedOperation *addFeedOp = (CLGoogleAddFeedOperation *)googleOp;
-		[db executeUpdate:@"INSERT INTO googleOperations (Type, GoogleUrl) VALUES (?, ?)", [NSNumber numberWithInteger:CLAddFeedType], [addFeedOp feedGoogleUrl]];
-	} else if ([googleOp isKindOfClass:[CLGoogleDeleteFeedOperation class]]) {
-		CLGoogleDeleteFeedOperation *deleteFeedOp = (CLGoogleDeleteFeedOperation *)googleOp;
-		[db executeUpdate:@"INSERT INTO googleOperations (Type, GoogleUrl) VALUES (?, ?)", [NSNumber numberWithInteger:CLDeleteFeedType], [deleteFeedOp feedGoogleUrl]];
-	} else if ([googleOp isKindOfClass:[CLGoogleFeedTitleOperation class]]) {
-		CLGoogleFeedTitleOperation *feedTitleOp = (CLGoogleFeedTitleOperation *)googleOp;
-		[db executeUpdate:@"INSERT INTO googleOperations (Type, GoogleUrl, Title) VALUES (?, ?, ?)", [NSNumber numberWithInteger:CLFeedTitleType], [feedTitleOp feedGoogleUrl], [feedTitleOp feedTitle]];
-	} else if ([googleOp isKindOfClass:[CLGoogleMarkReadOperation class]]) {
-		CLGoogleMarkReadOperation *markReadOp = (CLGoogleMarkReadOperation *)googleOp;
-		[db executeUpdate:@"INSERT INTO googleOperations (Type, GoogleUrl, Guid) VALUES (?, ?, ?)", [NSNumber numberWithInteger:CLMarkReadType], [markReadOp feedGoogleUrl], [markReadOp itemGuid]];
-	} else if ([googleOp isKindOfClass:[CLGoogleAddToFolderOperation class]]) {
-		CLGoogleAddToFolderOperation *folderOp = (CLGoogleAddToFolderOperation *)googleOp;
-		[db executeUpdate:@"INSERT INTO googleOperations (Type, GoogleUrl, Folder) VALUES (?, ?, ?)", [NSNumber numberWithInteger:CLAddToFolderType], [folderOp feedGoogleUrl], [folderOp folder]];
-	} else if ([googleOp isKindOfClass:[CLGoogleRemoveFromFolderOperation class]]) {
-		CLGoogleRemoveFromFolderOperation *folderOp = (CLGoogleRemoveFromFolderOperation *)googleOp;
-		[db executeUpdate:@"INSERT INTO googleOperations (Type, GoogleUrl, Folder) VALUES (?, ?, ?)", [NSNumber numberWithInteger:CLRemoveFromFolderType], [folderOp feedGoogleUrl], [folderOp folder]];
-	} else if ([googleOp isKindOfClass:[CLGoogleAddStarOperation class]]) {
-		CLGoogleAddStarOperation *addStarOp = (CLGoogleAddStarOperation *)googleOp;
-		[db executeUpdate:@"INSERT INTO googleOperations (Type, GoogleUrl, Guid) VALUES (?, ?, ?)", [NSNumber numberWithInteger:CLAddStarType], [addStarOp feedGoogleUrl], [addStarOp itemGuid]];
-	} else if ([googleOp isKindOfClass:[CLGoogleRemoveStarOperation class]]) {
-		CLGoogleRemoveStarOperation *removeStarOp = (CLGoogleRemoveStarOperation *)googleOp;
-		[db executeUpdate:@"INSERT INTO googleOperations (Type, GoogleUrl, Guid) VALUES (?, ?, ?)", [NSNumber numberWithInteger:CLRemoveStarType], [removeStarOp feedGoogleUrl], [removeStarOp itemGuid]];
-	} else {
-		[db close];
-		return;
-	}
-	
-	[db close];
-}
-
-- (void)removeGoogleOperationFromDb:(CLGoogleOperation *)googleOp {
-	FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
-	
-	if (![db open]) {
-		[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
-	}
-	
-	if ([googleOp isKindOfClass:[CLGoogleAddFeedOperation class]]) {
-		CLGoogleAddFeedOperation *addFeedOp = (CLGoogleAddFeedOperation *)googleOp;
-		[db executeUpdate:@"DELETE FROM googleOperations WHERE Type=? AND GoogleUrl=?", [NSNumber numberWithInteger:CLAddFeedType], [addFeedOp feedGoogleUrl]];
-	} else if ([googleOp isKindOfClass:[CLGoogleDeleteFeedOperation class]]) {
-		CLGoogleDeleteFeedOperation *deleteFeedOp = (CLGoogleDeleteFeedOperation *)googleOp;
-		[db executeUpdate:@"DELETE FROM googleOperations WHERE Type=? AND GoogleUrl=?", [NSNumber numberWithInteger:CLDeleteFeedType], [deleteFeedOp feedGoogleUrl]];
-	} else if ([googleOp isKindOfClass:[CLGoogleFeedTitleOperation class]]) {
-		CLGoogleFeedTitleOperation *feedTitleOp = (CLGoogleFeedTitleOperation *)googleOp;
-		[db executeUpdate:@"DELETE FROM googleOperations WHERE Type=? AND GoogleUrl=?", [NSNumber numberWithInteger:CLFeedTitleType], [feedTitleOp feedGoogleUrl]];
-	} else if ([googleOp isKindOfClass:[CLGoogleMarkReadOperation class]]) {
-		CLGoogleMarkReadOperation *markReadOp = (CLGoogleMarkReadOperation *)googleOp;
-		[db executeUpdate:@"DELETE FROM googleOperations WHERE Type=? AND GoogleUrl=? AND Guid=?", [NSNumber numberWithInteger:CLMarkReadType], [markReadOp feedGoogleUrl], [markReadOp itemGuid]];
-	} else if ([googleOp isKindOfClass:[CLGoogleAddToFolderOperation class]]) {
-		CLGoogleAddToFolderOperation *folderOp = (CLGoogleAddToFolderOperation *)googleOp;
-		[db executeUpdate:@"DELETE FROM googleOperations WHERE Type=? AND GoogleUrl=?", [NSNumber numberWithInteger:CLAddToFolderType], [folderOp feedGoogleUrl]];
-	} else if ([googleOp isKindOfClass:[CLGoogleRemoveFromFolderOperation class]]) {
-		CLGoogleRemoveFromFolderOperation *folderOp = (CLGoogleRemoveFromFolderOperation *)googleOp;
-		[db executeUpdate:@"DELETE FROM googleOperations WHERE Type=? AND GoogleUrl=?", [NSNumber numberWithInteger:CLRemoveFromFolderType], [folderOp feedGoogleUrl]];
-	} else if ([googleOp isKindOfClass:[CLGoogleAddStarOperation class]]) {
-		CLGoogleAddStarOperation *addStarOp = (CLGoogleAddStarOperation *)googleOp;
-		[db executeUpdate:@"DELETE FROM googleOperations WHERE Type=? AND GoogleUrl=? AND Guid=?", [NSNumber numberWithInteger:CLAddStarType], [addStarOp feedGoogleUrl], [addStarOp itemGuid]];
-	} else if ([googleOp isKindOfClass:[CLGoogleRemoveStarOperation class]]) {
-		CLGoogleRemoveStarOperation *removeStarOp = (CLGoogleRemoveStarOperation *)googleOp;
-		[db executeUpdate:@"DELETE FROM googleOperations WHERE Type=? AND GoogleUrl=? AND Guid=?", [NSNumber numberWithInteger:CLRemoveStarType], [removeStarOp feedGoogleUrl], [removeStarOp itemGuid]];
-	} else {
-		[db close];
-		return;
-	}
-	
-	[db close];
-}
-
-- (void)requeueGoogleOperationsInDb {
-	FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
-	
-	if (![db open]) {
-		[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
-	}
-	
-	FMResultSet *rs = [db executeQuery:@"SELECT * FROM googleOperations"];
-	
-	// note that the following method of processing items isn't ideal because it keeps a lock
-	// a lock on the database and calls separate functions. if one of those functions tried to get
-	// a lock on the database, it would deadlock. solution: store data in dictionary, close db,
-	// then make function calls
-	while ([rs next]) {
-		CLDatabaseGoogleOperationType opType = [rs intForColumn:@"Type"];
-		NSString *googleUrl = [rs stringForColumn:@"GoogleUrl"];
-		NSString *title = [rs stringForColumn:@"Title"];
-		NSString *guid = [rs stringForColumn:@"Guid"];
-		NSString *folder = [rs stringForColumn:@"Folder"];
-		
-		if (opType == CLAddFeedType) {
-			[self queueGoogleAddFeedForGoogleUrl:googleUrl addToDb:NO];
-		} else if (opType == CLDeleteFeedType) {
-			[self queueGoogleDeleteFeedForGoogleUrl:googleUrl addToDb:NO];
-		} else if (opType == CLFeedTitleType) {
-			[self queueGoogleFeedTitleOperationFor:googleUrl feedTitle:title addToDb:NO];
-		} else if (opType == CLMarkReadType) {
-			[self queueGoogleMarkReadOperationForGoogleUrl:googleUrl itemGuid:guid addToDb:NO];
-		} else if (opType == CLAddToFolderType) {
-			[self queueGoogleAddToFolderOperationForGoogleUrl:googleUrl folder:folder addToDb:NO];
-		} else if (opType == CLRemoveFromFolderType) {
-			[self queueGoogleRemoveFromFolderOperationForGoogleUrl:googleUrl folder:folder addToDb:NO];
-		} else if (opType == CLAddStarType) {
-			[self queueGoogleAddStarOperationForGoogleUrl:googleUrl itemGuid:guid addToDb:NO];
-		} else if (opType == CLRemoveStarType) {
-			[self queueGoogleRemoveStarOperationForGoogleUrl:googleUrl itemGuid:guid addToDb:NO];
-		}
-	}
-	
-	[rs close];
-	[db close];
 }
 
 - (void)cancelAllActivityFor:(CLSourceListItem *)item {
@@ -1281,19 +766,15 @@ static NSArray *preferencesToolbarItems;
 		[self cancelAnyTimersIn:iconRefreshTimers forItem:item];
 		
 		// cancel any active operations
-		NSMutableArray *operationList = [NSMutableArray arrayWithArray:[operationQueue operations]];
-		[operationList addObjectsFromArray:[googleOperationQueue operations]];
+		NSArray *operationList = [operationQueue operations];
 		
 		CLSourceListFeed *operationFeed;
-		NSString *googleUrl;
 		
 		for (NSOperation *operation in operationList) {
 			operationFeed = nil;
 			
 			if ([operation isKindOfClass:[CLIconRefreshOperation class]]) {
 				operationFeed = [(CLIconRefreshOperation *)operation feed];
-			} else if ([operation isKindOfClass:[CLGoogleFeedOperation class]]) {
-				operationFeed = [(CLGoogleFeedOperation *)operation feed];
 			}
 			
 			if (operationFeed != nil) {
@@ -1302,75 +783,14 @@ static NSArray *preferencesToolbarItems;
 					
 					if ([feed dbId] == [operationFeed dbId]) {
 						[operation cancel];
-						
-						if ([operation isKindOfClass:[CLGoogleFeedOperation class]]) {
-							[activityViewGoogleFeeds removeObject:operationFeed];
-							[self refreshAllActivityViews];
-						}
 					}
 				} else if ([item isKindOfClass:[CLSourceListFolder class]]) {
 					CLSourceListFolder *folder = (CLSourceListFolder *)item;
 					
 					if ([SyndicationAppDelegate isSourceListItem:operationFeed descendentOf:folder]) {
 						[operation cancel];
-						
-						if ([operation isKindOfClass:[CLGoogleFeedOperation class]]) {
-							[activityViewGoogleFeeds removeObject:operationFeed];
-							[self refreshAllActivityViews];
-						}
 					}
 				}
-			}
-			
-			googleUrl = nil;
-			
-			if ([operation isKindOfClass:[CLGoogleAddFeedOperation class]]) {
-				googleUrl = [(CLGoogleAddFeedOperation *)operation feedGoogleUrl];
-			} else if ([operation isKindOfClass:[CLGoogleAddToFolderOperation class]]) {
-				googleUrl = [(CLGoogleAddToFolderOperation *)operation feedGoogleUrl];
-			} else if ([operation isKindOfClass:[CLGoogleFeedTitleOperation class]]) {
-				googleUrl = [(CLGoogleFeedTitleOperation *)operation feedGoogleUrl];
-			} else if ([operation isKindOfClass:[CLGoogleMarkReadOperation class]]) {
-				googleUrl = [(CLGoogleMarkReadOperation *)operation feedGoogleUrl];
-			} else if ([operation isKindOfClass:[CLGoogleRemoveFromFolderOperation class]]) {
-				googleUrl = [(CLGoogleRemoveFromFolderOperation *)operation feedGoogleUrl];
-			} else if ([operation isKindOfClass:[CLGoogleAddStarOperation class]]) {
-				googleUrl = [(CLGoogleAddStarOperation *)operation feedGoogleUrl];
-			} else if ([operation isKindOfClass:[CLGoogleRemoveStarOperation class]]) {
-				googleUrl = [(CLGoogleRemoveStarOperation *)operation feedGoogleUrl];
-			}
-			
-			if (googleUrl != nil) {
-				if ([item isKindOfClass:[CLSourceListFeed class]]) {
-					CLSourceListFeed *feed = (CLSourceListFeed *)item;
-					
-					if ([[feed googleUrl] isEqual:googleUrl]) {
-						[operation cancel];
-					}
-				} else if ([item isKindOfClass:[CLSourceListFolder class]]) {
-					CLSourceListFolder *folder = (CLSourceListFolder *)item;
-					CLSourceListFeed *googleFeed = [self feedForUrlString:googleUrl isFromGoogle:YES];
-					
-					if ([SyndicationAppDelegate isSourceListItem:googleFeed descendentOf:folder]) {
-						[operation cancel];
-					}
-				}
-			}
-		}
-		
-		if ([item isKindOfClass:[CLSourceListFeed class]]) {
-			CLSourceListFeed *feed = (CLSourceListFeed *)item;
-			
-			if ([feed isFromGoogle]) {
-				FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
-				
-				if (![db open]) {
-					[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
-				}
-				
-				[db executeUpdate:@"DELETE FROM googleOperations WHERE GoogleUrl=?", [feed googleUrl]];
-				
-				[db close];
 			}
 		}
 	}
@@ -1406,64 +826,6 @@ static NSArray *preferencesToolbarItems;
 	for (CLTimer *timer in timersToRemove) {
 		[timerList removeObject:timer];
 	}
-}
-
-- (void)cancelGoogleActivityOfType:(CLDatabaseGoogleOperationType)activityType forGoogleUrl:(NSString *)googleUrl itemGuid:(NSString *)itemGuid folder:(NSString *)folder {
-	
-	NSArray *operationList = [googleOperationQueue operations];
-	
-	for (NSOperation *operation in operationList) {
-		
-		BOOL shouldCancel = NO;
-		
-		if (activityType == CLAddToFolderType) {
-			if ([operation isKindOfClass:[CLGoogleAddToFolderOperation class]]) {
-				NSString *operationGoogleUrl = [(CLGoogleAddToFolderOperation *)operation feedGoogleUrl];
-				
-				if ([operationGoogleUrl isEqual:googleUrl]) {
-					shouldCancel = YES;
-				}
-			}
-		} else if (activityType == CLAddStarType) {
-			if ([operation isKindOfClass:[CLGoogleAddStarOperation class]]) {
-				NSString *operationGoogleUrl = [(CLGoogleAddStarOperation *)operation feedGoogleUrl];
-				NSString *operationGuid = [(CLGoogleAddStarOperation *)operation itemGuid];
-				
-				if ([operationGoogleUrl isEqual:googleUrl] && [operationGuid isEqual:itemGuid]) {
-					shouldCancel = YES;
-				}
-			}
-		} else if (activityType == CLRemoveStarType) {
-			if ([operation isKindOfClass:[CLGoogleRemoveStarOperation class]]) {
-				NSString *operationGoogleUrl = [(CLGoogleRemoveStarOperation *)operation feedGoogleUrl];
-				NSString *operationGuid = [(CLGoogleRemoveStarOperation *)operation itemGuid];
-				
-				if ([operationGoogleUrl isEqual:googleUrl] && [operationGuid isEqual:itemGuid]) {
-					shouldCancel = YES;
-				}
-			}
-		}
-		
-		if (shouldCancel) {
-			[operation cancel];
-		}
-	}
-	
-	FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
-	
-	if (![db open]) {
-		[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
-	}
-	
-	if (activityType == CLAddToFolderType) {
-		[db executeUpdate:@"DELETE FROM googleOperations WHERE Type=? AND GoogleUrl=?", [NSNumber numberWithInteger:activityType], googleUrl];
-	} else if (activityType == CLAddStarType) {
-		[db executeUpdate:@"DELETE FROM googleOperations WHERE Type=? AND GoogleUrl=? AND Guid=?", [NSNumber numberWithInteger:activityType], googleUrl, itemGuid];
-	} else if (activityType == CLRemoveStarType) {
-		[db executeUpdate:@"DELETE FROM googleOperations WHERE Type=? AND GoogleUrl=? AND Guid=?", [NSNumber numberWithInteger:activityType], googleUrl, itemGuid];
-	}
-	
-	[db close];
 }
 
 - (void)processNewPosts:(NSArray *)newPosts forFeed:(CLSourceListFeed *)feed {
@@ -1527,18 +889,9 @@ static NSArray *preferencesToolbarItems;
 				for (NSString *enclosure in [post enclosures]) {
 					[db executeUpdate:@"INSERT INTO enclosure (PostId, Url) VALUES (?, ?)", [NSNumber numberWithInteger:insertId], enclosure];
 				}
-				
-				if ([feed isFromGoogle] && [post isRead] == NO) {
-					[[feed googleUnreadGuids] addObject:[post guid]];
-				}
 			}
 			
 			[self runDatabaseUpdateOnBackgroundThread:UNREAD_COUNT_QUERY, [NSNumber numberWithInteger:[feed dbId]], [NSNumber numberWithInteger:[feed dbId]], nil];
-			
-			if ([feed isFromGoogle]) {
-				NSData *googleUnreadGuidsData = [NSArchiver archivedDataWithRootObject:[feed googleUnreadGuids]];
-				[db executeUpdate:@"UPDATE feed SET GoogleUnreadGuids=? WHERE Id=?", googleUnreadGuidsData, [NSNumber numberWithInteger:[feed dbId]]];
-			}
 			
 			[db commit];
 			
@@ -1815,10 +1168,7 @@ static NSArray *preferencesToolbarItems;
 }
 
 - (void)didStartOperation:(CLOperation *)op {
-	if ([op isKindOfClass:[CLGoogleFeedOperation class]]) {
-		[activityViewGoogleFeeds addObject:[(CLGoogleFeedOperation *)op feed]];
-		[self refreshAllActivityViews];
-	}
+	
 }
 
 - (void)didFinishOperation:(CLOperation *)op {
@@ -1831,56 +1181,20 @@ static NSArray *preferencesToolbarItems;
 		
 		[self startFeedRequests];
 		
-	} else if ([op isKindOfClass:[CLGoogleFeedOperation class]]) {
-		
-		[activityViewGoogleFeeds removeObject:[(CLGoogleFeedOperation *)op feed]];
-		[self refreshAllActivityViews];
-		
-	} else if ([op isKindOfClass:[CLGoogleAddFeedOperation class]]) {
-		
-		CLSourceListFeed *feed = [self feedForUrlString:[(CLGoogleAddFeedOperation *)op feedGoogleUrl] isFromGoogle:YES];
-		
-		if (feed != nil) {
-			[self queueGoogleFeedOperationFor:feed timestamp:0 unreadCount:10000];
-		}
-		
 	}
 	
 	if (requestInProgress) {
-		if ([op isKindOfClass:[CLGoogleOperation class]]) {
-			
-			if (activeRequestType == CLRequestGoogleSync || activeRequestType == CLRequestGoogleStarredSync || activeRequestType == CLRequestGoogleSingleFeedSync) {
-				if ([googleOperationQueue operationCount] == 1) {
+		if ([operationQueue operationCount] == 1) {
+			if (activeRequestType == CLRequestAllFeedsSync || activeRequestType == CLRequestSpecificFeedsSync) {
+				if ([feedRequests count] == 0 && [feedsToSync count] == 0) {
 					[self setRequestInProgress:NO];
 					[self startRequestIfNoneInProgress];
 				}
-			}
-			
-		} else {
-			
-			if ([operationQueue operationCount] == 1) {
-				if (activeRequestType == CLRequestNonGoogleSync || activeRequestType == CLRequestSpecificFeedsSync) {
-					if ([feedRequests count] == 0 && [feedsToSync count] == 0) {
-						[self setRequestInProgress:NO];
-						[self startRequestIfNoneInProgress];
-					}
-				} else if (activeRequestType == CLRequestDeleteHidden) {
-					[self setRequestInProgress:NO];
-					[self startRequestIfNoneInProgress];
-				}
+			} else if (activeRequestType == CLRequestDeleteHidden) {
+				[self setRequestInProgress:NO];
+				[self startRequestIfNoneInProgress];
 			}
 		}
-	}
-	
-	if ([op isKindOfClass:[CLGoogleAddFeedOperation class]] || [op isKindOfClass:[CLGoogleDeleteFeedOperation class]] ||
-		[op isKindOfClass:[CLGoogleFeedTitleOperation class]] || [op isKindOfClass:[CLGoogleMarkReadOperation class]] ||
-		[op isKindOfClass:[CLGoogleAddToFolderOperation class]] || [op isKindOfClass:[CLGoogleRemoveFromFolderOperation class]] ||
-		[op isKindOfClass:[CLGoogleAddStarOperation class]] || [op isKindOfClass:[CLGoogleRemoveStarOperation class]]) {
-		[self removeGoogleOperationFromDb:(CLGoogleOperation *)op];
-	}
-	
-	if ([op isKindOfClass:[CLGoogleOperation class]]) {
-		[self setGoogleStuckOperation:nil];
 	}
 }
 
@@ -1904,7 +1218,7 @@ static NSArray *preferencesToolbarItems;
 }
 
 - (void)feedParserOperationFoundTitleForFeed:(CLSourceListFeed *)feed {
-	[self sourceListDidRenameItem:feed propagateChangesToGoogle:NO];
+	[self sourceListDidRenameItem:feed];
 }
 
 - (void)feedParserOperationFoundWebsiteLinkForFeed:(CLSourceListFeed *)feed {
@@ -1942,240 +1256,7 @@ static NSArray *preferencesToolbarItems;
 	[self markIconAsRefreshedAndStartTimer:feed];
 }
 
-- (void)googleOperation:(CLGoogleSyncOperation *)syncOp foundAuthToken:(NSString *)token {
-	[self setGoogleAuth:token];
-	
-	NSArray *operationList = [googleOperationQueue operations];
-	
-	for (CLGoogleOperation *operation in operationList) {
-		[operation setGoogleAuth:token];
-	}
-}
-
-- (void)googleOperation:(CLGoogleOperation *)googleOp handleAuthError:(NSDictionary *)authError {
-	[self setGoogleStuckOperation:googleOp];
-	
-	NSString *errorString = @"";
-	
-	if (authError != nil && [authError objectForKey:@"Error"] != nil) {
-		errorString = [authError objectForKey:@"Error"];
-	}
-	
-	NSAlert *alert = [[NSAlert alloc] init];
-	[alert addButtonWithTitle:@"OK"];
-	
-	if ([errorString isEqual:@"BadAuthentication"] || [errorString isEqual:@"Unknown"]) {
-		
-		[alert setMessageText:@"There was an error logging you in. Please make sure your email and password are correct and try again."];
-		[alert runModal];
-		
-	} else if ([errorString isEqual:@"NotVerified"]) {
-		
-		[alert setMessageText:@"Your Google account has not been verified. You must access your Google account directly to resolve this error."];
-		[alert setInformativeText:@"Press OK to open your account in the default web browser."];
-		
-		if ([alert runModal] == NSAlertFirstButtonReturn) {
-			[[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"https://www.google.com/accounts/ManageAccount"]];
-		}
-		
-	} else if ([errorString isEqual:@"TermsNotAgreed"]) {
-		
-		[alert setMessageText:@"You have not agreed to Google's Terms of Use. You must access your Google account directly to resolve this error."];
-		[alert setInformativeText:@"Press OK to open your account in the default web browser."];
-		
-		if ([alert runModal] == NSAlertFirstButtonReturn) {
-			[[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"https://www.google.com/accounts/ManageAccount"]];
-		}
-		
-	} else if ([errorString isEqual:@"CaptchaRequired"]) {
-		
-		[alert setMessageText:@"You must pass a CAPTCHA test on Google's website before syncing."];
-		[alert setInformativeText:@"Press OK to load the page in your default web browser."];
-		
-		if ([alert runModal] == NSAlertFirstButtonReturn) {
-			[[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"https://www.google.com/accounts/DisplayUnlockCaptcha"]];
-		}
-		
-	} else if ([errorString isEqual:@"AccountDeleted"]) {
-		
-		[alert setMessageText:@"According to Google, the account you specified has been deleted."];
-		[alert runModal];
-		
-	} else if ([errorString isEqual:@"AccountDisabled"]) {
-		
-		[alert setMessageText:@"According to Google, the account you specified has been disabled."];
-		[alert runModal];
-		
-	} else if ([errorString isEqual:@"ServiceDisabled"]) {
-		
-		[alert setMessageText:@"According to Google, the account you specified no longer has access to Google Reader."];
-		[alert runModal];
-		
-	} else if ([errorString isEqual:@"ServiceUnavailable"]) {
-		
-		[alert setMessageText:@"Google Reader is not currently accessible. Please try again later."];
-		[alert runModal];
-		
-	}
-	
-	[alert release];
-	
-	[self setupGoogleSync:self];
-}
-
-- (void)googleSyncOperation:(CLGoogleSyncOperation *)syncOp deleteFeedWithUrlString:(NSString *)urlString {
-	CLSourceListFeed *feed = [self feedForUrlString:urlString isFromGoogle:YES];
-	
-	if (feed != nil) {
-		[self deleteSourceListItem:feed propagateChangesToGoogle:NO];
-	}
-}
-
-- (void)googleSyncOperation:(CLGoogleSyncOperation *)syncOp addFeedWithUrlString:(NSString *)urlString  title:(NSString *)title folderTitle:(NSString *)folderTitle {	
-	[self addSubscriptionForUrlString:urlString withTitle:title toFolder:nil isFromGoogle:YES propagateChangesToGoogle:NO refreshImmediately:YES];
-	
-	CLSourceListFeed *feed = [self feedForUrlString:urlString isFromGoogle:YES];
-	
-	[self makeSureGoogleFeed:feed isInFolderWithTitle:folderTitle];
-}
-
-- (void)googleSyncOperation:(CLGoogleSyncOperation *)syncOp foundTitle:(NSString *)title forUrlString:(NSString *)urlString {
-	CLSourceListFeed *feed = [self feedForUrlString:urlString isFromGoogle:YES];
-	
-	if (feed != nil) {
-		[feed setTitle:title];
-		[self sourceListDidRenameItem:feed propagateChangesToGoogle:NO];
-	}
-}
-
-- (void)googleSyncOperation:(CLGoogleSyncOperation *)syncOp foundFolder:(NSString *)folderString forUrlString:(NSString *)urlString {
-	CLSourceListFeed *feed = [self feedForUrlString:urlString isFromGoogle:YES];
-	[self makeSureGoogleFeed:feed isInFolderWithTitle:folderString];
-}
-
-- (void)makeSureGoogleFeed:(CLSourceListFeed *)feed isInFolderWithTitle:(NSString *)folderTitle {
-	if (feed != nil) {
-		NSString *parentFolderTitle = nil;
-		
-		if ([feed enclosingFolderReference] != nil) {
-			parentFolderTitle = [[feed enclosingFolderReference] title];
-		}
-		
-		// basically, check to see if the folder changed
-		if ((parentFolderTitle == nil && folderTitle != nil) || (folderTitle == nil && parentFolderTitle != nil) ||
-			(folderTitle != nil && parentFolderTitle != nil && [parentFolderTitle isEqual:folderTitle] == NO)) {
-			
-			CLSourceListFolder *folder = nil;
-			
-			if (folderTitle != nil) {
-				
-				// look for a folder with the right name at the root level
-				for (CLSourceListItem *item in subscriptionList) {
-					if ([item isKindOfClass:[CLSourceListFolder class]] && [[item title] isEqual:folderTitle]) {
-						folder = (CLSourceListFolder *)item;
-						break;
-					}
-				}
-				
-				if (folder == nil) {
-					folder = [self addFolderWithTitle:folderTitle toFolder:nil forWindow:nil];
-				}
-			}
-			
-			[self moveItem:feed toFolder:folder propagateChangesToGoogle:NO];
-		}
-	}
-}
-
-- (void)googleSyncOperation:(CLGoogleSyncOperation *)syncOp queueFeedOperationForUrlString:(NSString *)urlString newestItemTimestamp:(NSInteger)timestamp unreadCount:(NSInteger)unreadCount {
-	CLSourceListFeed *feed = [self feedForUrlString:urlString isFromGoogle:YES];
-	
-	if (feed != nil) {
-		[self queueGoogleFeedOperationFor:feed timestamp:timestamp unreadCount:unreadCount];
-	}
-}
-
-- (void)googleFeedOperation:(CLGoogleFeedOperation *)feedOp markPostWithDbIdAsRead:(NSInteger)dbId {
-	[self markPostWithDbIdAsRead:dbId propagateChangesToGoogle:NO];
-}
-
-- (void)googleFeedOperation:(CLGoogleFeedOperation *)feedOp markPostWithDbIdAsUnread:(NSInteger)dbId {
-	[self markPostWithDbIdAsUnread:dbId];
-}
-
-- (void)googleFeedOperation:(CLGoogleFeedOperation *)feedOp foundWebsiteLinkForFeed:(CLSourceListFeed *)feed {
-	[self queueIconRefreshOperationFor:feed];
-}
-
-- (void)googleFeedOperation:(CLGoogleFeedOperation *)feedOp foundTitleForFeed:(CLSourceListFeed *)feed {
-	[self sourceListDidRenameItem:feed propagateChangesToGoogle:NO];
-}
-
-- (void)googleFeedOperation:(CLGoogleFeedOperation *)feedOp foundNewPosts:(NSArray *)newPosts forFeed:(CLSourceListFeed *)feed {
-	NSInteger numUnread = 0;
-	
-	if (feed != nil) {
-		
-		for (CLPost *post in newPosts) {
-			[post setFeedDbId:[feed dbId]];
-			[post setFeedTitle:[feed title]];
-			
-			if ([post isRead] == NO) {
-				numUnread++;
-			}
-		}
-		
-		if (numUnread > 0) {
-			[feed setBadgeValue:([feed badgeValue] + numUnread)];
-			[SyndicationAppDelegate changeBadgeValuesBy:numUnread forAncestorsOfItem:feed];
-			[self changeNewItemsBadgeValueBy:numUnread];
-		}
-		
-		[self processNewPosts:newPosts forFeed:feed];
-	}
-}
-
-- (void)googleStarredOperation:(CLGoogleStarredOperation *)starredOperation addStarredItems:(NSArray *)items {
-	for (CLPost *post in items) {
-		FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
-		
-		if (![db open]) {
-			[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
-		}
-		
-		FMResultSet *rs = [db executeQuery:@"SELECT * FROM post WHERE Guid=? AND FeedId=?", [post guid], [NSNumber numberWithInteger:[post feedDbId]]];
-		
-		if ([rs next]) {
-			[post populateUsingResultSet:rs];
-		}
-		
-		[rs close];
-		[db close];
-		
-		// essentially, if this is a new post we don't even have in the db, we need to add it
-		if ([post dbId] <= 0) {
-			CLSourceListFeed *feed = [self feedForDbId:[post feedDbId]];
-			
-			if (feed != nil) {
-				[self processNewPosts:[NSArray arrayWithObject:post] forFeed:feed];
-			}
-		}
-		
-		[self addStarToPost:post propagateChangesToGoogle:NO];
-	}
-}
-
-- (void)googleStarredOperation:(CLGoogleStarredOperation *)starredOperation removeStarredItems:(NSArray *)items {
-	for (CLPost *post in items) {
-		[self removeStarFromPost:post propagateChangesToGoogle:NO];
-	}
-}
-
-- (void)googleStarredOperation:(CLGoogleStarredOperation *)starredOperation didAddNewHiddenFeed:(CLSourceListFeed *)feed {
-	[feedLookupDict setObject:feed forKey:[NSNumber numberWithInteger:[feed dbId]]];
-}
-
-- (NSInteger)dbIdForUrlString:(NSString *)urlString isFromGoogle:(BOOL)isFromGoogle {
+- (NSInteger)dbIdForUrlString:(NSString *)urlString {
 	NSInteger dbId = 0;
 	
 	if (urlString == nil || [urlString length] == 0) {
@@ -2188,13 +1269,7 @@ static NSArray *preferencesToolbarItems;
 		[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
 	}
 	
-	FMResultSet *rs;
-	
-	if (isFromGoogle) {
-		rs = [db executeQuery:@"SELECT * FROM feed WHERE GoogleUrl=? AND IsFromGoogle=1", urlString];
-	} else {
-		rs = [db executeQuery:@"SELECT * FROM feed WHERE Url=? AND IsFromGoogle=0", urlString];
-	}
+	FMResultSet *rs = [db executeQuery:@"SELECT * FROM feed WHERE Url=?", urlString];
 	
 	if ([rs next]) {
 		dbId = [rs longForColumn:@"Id"];
@@ -2206,11 +1281,11 @@ static NSArray *preferencesToolbarItems;
 	return dbId;
 }
 
-- (CLSourceListFeed *)feedForUrlString:(NSString *)urlString isFromGoogle:(BOOL)isFromGoogle {
+- (CLSourceListFeed *)feedForUrlString:(NSString *)urlString {
 	CLSourceListFeed *feed = nil;
 	NSInteger dbId = 0;
 	
-	dbId = [self dbIdForUrlString:urlString isFromGoogle:isFromGoogle];
+	dbId = [self dbIdForUrlString:urlString];
 	
 	if (dbId > 0) {
 		feed = [self feedForDbId:dbId];
@@ -2220,9 +1295,7 @@ static NSArray *preferencesToolbarItems;
 }
 
 - (void)timeToSyncFeeds:(CLTimer *)timer {
-	[self queueNonGoogleSyncRequest];
-	[self queueGoogleSyncRequest];
-	[self queueGoogleStarredSyncRequest];
+	[self queueAllFeedsSyncRequest];
 	
 	if (preferenceCheckForNewArticles) {
 		CLTimer *syncTimer = [CLTimer scheduledTimerWithTimeInterval:preferenceCheckForNewArticles target:self selector:@selector(timeToSyncFeeds:) userInfo:nil repeats:NO];
@@ -2244,7 +1317,6 @@ static NSArray *preferencesToolbarItems;
 	[windowController showWindow:self];
 	
 	[[windowController activityView] setFeeds:activityViewFeeds];
-	[[windowController activityView] setGoogleFeeds:activityViewGoogleFeeds];
 	[[windowController activityView] setNeedsDisplay:YES];
 	
 	if (isFirstWindow) {
@@ -2293,7 +1365,7 @@ static NSArray *preferencesToolbarItems;
 	}
 }
 
-- (void)markPostWithDbIdAsRead:(NSInteger)dbId propagateChangesToGoogle:(BOOL)propagate {
+- (void)markPostWithDbIdAsRead:(NSInteger)dbId {
 	
 	FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 	
@@ -2315,10 +1387,6 @@ static NSArray *preferencesToolbarItems;
 	[db close];
 	
 	CLSourceListFeed *feed = [self feedForDbId:feedId];
-	
-	if ([feed isFromGoogle]){
-		[[feed googleUnreadGuids] removeObject:guid];
-	}
 	
 	[SyndicationAppDelegate changeBadgeValueBy:-1 forItem:feed];
 	[SyndicationAppDelegate changeBadgeValuesBy:-1 forAncestorsOfItem:feed];
@@ -2330,81 +1398,6 @@ static NSArray *preferencesToolbarItems;
 	
 	[self runDatabaseUpdateOnBackgroundThread:@"UPDATE post SET IsRead=1 WHERE Id=?", [NSNumber numberWithInteger:dbId], nil];
 	[self runDatabaseUpdateOnBackgroundThread:UNREAD_COUNT_QUERY, [NSNumber numberWithInteger:feedId], [NSNumber numberWithInteger:feedId], nil];
-	
-	if ([feed isFromGoogle]){
-		NSData *googleUnreadGuidsData = [NSArchiver archivedDataWithRootObject:[feed googleUnreadGuids]];
-		[self runDatabaseUpdateOnBackgroundThread:@"UPDATE feed SET GoogleUnreadGuids=? WHERE Id=?", googleUnreadGuidsData, [NSNumber numberWithInteger:feedId], nil];
-	}
-	
-	if (propagate) {
-		
-		db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
-		
-		if (![db open]) {
-			[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
-		}
-		
-		NSString *googleUrl = nil;
-		NSString *itemGuid = nil;
-		
-		rs = [db executeQuery:@"SELECT feed.GoogleUrl, post.Guid FROM feed, post WHERE post.FeedId=feed.Id AND post.Id=? AND feed.IsFromGoogle=1", [NSNumber numberWithInteger:dbId]];
-		
-		if ([rs next]) {
-			googleUrl = [rs stringForColumn:@"GoogleUrl"];
-			itemGuid = [rs stringForColumn:@"Guid"];
-		}
-		
-		[rs close];
-		[db close];
-		
-		if (googleUrl != nil && [googleUrl length] > 0 && itemGuid != nil && [itemGuid length] > 0) {
-			[self queueGoogleMarkReadOperationForGoogleUrl:googleUrl itemGuid:itemGuid addToDb:YES];
-		}
-	}
-}
-
-- (void)markPostWithDbIdAsUnread:(NSInteger)dbId {
-	FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
-	
-	if (![db open]) {
-		[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
-	}
-	
-	FMResultSet *rs = [db executeQuery:@"SELECT * FROM post WHERE Id=?", [NSNumber numberWithInteger:dbId]];
-	
-	NSInteger feedId = 0;
-	NSString *guid = nil;
-	
-	if ([rs next]) {
-		feedId = [rs longForColumn:@"FeedId"];
-		guid = [rs stringForColumn:@"Guid"];
-	}
-	
-	[rs close];
-	
-	[db close];
-	
-	CLSourceListFeed *feed = [self feedForDbId:feedId];
-	
-	if ([feed isFromGoogle]){
-		[[feed googleUnreadGuids] addObject:guid];
-	}
-	
-	[SyndicationAppDelegate changeBadgeValueBy:1 forItem:feed];
-	[SyndicationAppDelegate changeBadgeValuesBy:1 forAncestorsOfItem:feed];
-	
-	[self changeNewItemsBadgeValueBy:1];
-	[self sourceListDidChange];
-	
-	[self markViewItemsAsUnreadForPostDbId:dbId];
-	
-	[self runDatabaseUpdateOnBackgroundThread:@"UPDATE post SET IsRead=0 WHERE Id=?", [NSNumber numberWithInteger:dbId], nil];
-	[self runDatabaseUpdateOnBackgroundThread:UNREAD_COUNT_QUERY, [NSNumber numberWithInteger:feedId], [NSNumber numberWithInteger:feedId], nil];
-	
-	if ([feed isFromGoogle]){
-		NSData *googleUnreadGuidsData = [NSArchiver archivedDataWithRootObject:[feed googleUnreadGuids]];
-		[self runDatabaseUpdateOnBackgroundThread:@"UPDATE feed SET GoogleUnreadGuids=? WHERE Id=?", googleUnreadGuidsData, [NSNumber numberWithInteger:feedId], nil];
-	}
 }
 
 - (void)markViewItemsAsReadForPostDbId:(NSInteger)postDbId {
@@ -2435,46 +1428,6 @@ static NSArray *preferencesToolbarItems;
 						[post setIsRead:YES];
 						
 						[[classicView unreadItemsDict] removeObjectForKey:key];
-					}
-					
-					[[classicView tableView] setNeedsDisplay:YES];
-				}
-			}
-		}
-	}
-}
-
-// this method is brutally inefficent, but is used rarely, if ever
-// it is only used when an item arrives from google that is read in the db but unread in google
-- (void)markViewItemsAsUnreadForPostDbId:(NSInteger)postDbId {
-	if (postDbId > 0) {
-		for (CLWindowController *windowController in windowControllers) {
-			CLTabView *tabView = [windowController tabView];
-			
-			for (CLTabViewItem *tabViewItem in [tabView tabViewItems]) {
-				
-				if ([tabViewItem tabType] == CLTimelineType) {
-					CLTimelineView *timelineView = [tabViewItem timelineView];
-					
-					for (CLTimelineViewItem *timelineViewItem in [timelineView timelineViewItems]) {
-						if ([timelineViewItem postDbId] == postDbId) {
-							[timelineViewItem setIsRead:NO];
-							[timelineViewItem updateClassNames];
-							
-							[SyndicationAppDelegate addToTimelineUnreadItemsDict:timelineViewItem];
-						}
-					}
-					
-				} else if ([tabViewItem tabType] == CLClassicType) {
-					CLClassicView *classicView = [tabViewItem classicView];
-					
-					for (CLPost *post in [classicView posts]) {
-						if ([post dbId] == postDbId) {
-							[post setIsRead:NO];
-							
-							NSNumber *key = [NSNumber numberWithInteger:[post dbId]];
-							[[classicView unreadItemsDict] setObject:post forKey:key];
-						}
 					}
 					
 					[[classicView tableView] setNeedsDisplay:YES];
@@ -2538,16 +1491,7 @@ static NSArray *preferencesToolbarItems;
 		CLSourceListFeed *feed = (CLSourceListFeed *)item;
 		
 		NSString *title = [feed title];
-		NSString *xmlUrl = nil;
-		
-		if ([feed isFromGoogle]) {
-			if ([feed googleUrl] != nil && [[[feed googleUrl] substringToIndex:5] isEqual:@"feed/"]) {
-				xmlUrl = [[feed googleUrl] substringFromIndex:5];
-			}
-		} else {
-			xmlUrl = [feed url];
-		}
-		
+		NSString *xmlUrl = [feed url];
 		NSString *htmlUrl = [feed websiteLink];
 		
 		if (title == nil) {
@@ -2766,57 +1710,12 @@ static NSArray *preferencesToolbarItems;
 	[self updateSubscriptionsMenu];
 }
 
-- (void)sourceListDidRenameItem:(CLSourceListItem *)item propagateChangesToGoogle:(BOOL)propagate {
+- (void)sourceListDidRenameItem:(CLSourceListItem *)item {
 	
 	[self sortSourceList];
 	[self sourceListDidChange];
 	[self restoreSourceListSelections];
 	[self refreshAllActivityViews];
-	
-	if (propagate) {
-		if ([item isKindOfClass:[CLSourceListFeed class]]) {
-			CLSourceListFeed *feed = (CLSourceListFeed *)item;
-			if ([feed isFromGoogle]) {
-				[self queueGoogleFeedTitleOperationFor:[feed googleUrl] feedTitle:[feed title] addToDb:YES];
-			}
-		}
-		
-		// if we just changed the name of a folder, we may need to update google items in the folder (move them in GR)
-		if ([item isKindOfClass:[CLSourceListFolder class]]) {
-			CLSourceListFolder *folder = (CLSourceListFolder *)item;
-			
-			// it's a pain, but we need to figure out what the previous title was
-			NSString *previousTitle = nil;
-			
-			FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
-			
-			if (![db open]) {
-				[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
-			}
-			
-			FMResultSet *rs = [db executeQuery:@"SELECT Title FROM folder WHERE Id=?", [NSNumber numberWithInteger:[folder dbId]]];
-			
-			if ([rs next]) {
-				previousTitle = [rs stringForColumn:@"Title"];
-			}
-			
-			[rs close];
-			[db close];
-			
-			for (CLSourceListItem *child in [folder children]) {
-				if ([child isKindOfClass:[CLSourceListFeed class]]) {
-					CLSourceListFeed *childFeed = (CLSourceListFeed *)child;
-					
-					if ([childFeed isFromGoogle] && [childFeed googleUrl] != nil && [[childFeed googleUrl] length] > 0) {
-						NSString *googleUrl = [childFeed googleUrl];
-						
-						[self queueGoogleRemoveFromFolderOperationForGoogleUrl:googleUrl folder:previousTitle addToDb:YES];
-						[self queueGoogleAddToFolderOperationForGoogleUrl:googleUrl folder:[folder title] addToDb:YES];
-					}
-				}
-			}
-		}
-	}
 	
 	for (CLWindowController *windowController in windowControllers) {
 		
@@ -2993,7 +1892,7 @@ static NSArray *preferencesToolbarItems;
 	return post;
 }
 
-- (CLSourceListFeed *)addSubscriptionForUrlString:(NSString *)url withTitle:(NSString *)feedTitle toFolder:(CLSourceListFolder *)folder isFromGoogle:(BOOL)isFromGoogle propagateChangesToGoogle:(BOOL)propagate refreshImmediately:(BOOL)shouldRefresh {
+- (CLSourceListFeed *)addSubscriptionForUrlString:(NSString *)url withTitle:(NSString *)feedTitle toFolder:(CLSourceListFolder *)folder refreshImmediately:(BOOL)shouldRefresh {
 	
 	FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 	
@@ -3001,11 +1900,8 @@ static NSArray *preferencesToolbarItems;
 		[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
 	}
 	
-	NSString *regularUrl = nil;
-	NSString *googleUrl = nil;
 	NSNumber *folderId = nil;
 	NSInteger rowId = 0;
-	NSMutableSet *googleUnreadGuids = nil;
 	
 	if (folder != nil) {
 		folderId = [NSNumber numberWithInteger:[folder dbId]];
@@ -3013,37 +1909,9 @@ static NSArray *preferencesToolbarItems;
 	
 	BOOL hasHiddenEquivalent = NO;
 	
-	if (isFromGoogle) {
-		googleUrl = url;
-		
-		FMResultSet *rs = [db executeQuery:@"SELECT * FROM feed WHERE GoogleUrl=? AND IsFromGoogle=1 AND IsHidden=1", googleUrl];
-		
-		if ([rs next]) {
-			rowId = [rs longForColumn:@"Id"];
-			
-			hasHiddenEquivalent = YES;
-		}
-		
-		[rs close];
-		
-		googleUnreadGuids = [NSMutableSet set];
-		NSData *googleUnreadGuidsData = [NSArchiver archivedDataWithRootObject:googleUnreadGuids];
-		
-		if (hasHiddenEquivalent) {
-			[db executeUpdate:@"UPDATE feed SET FolderId=?, Title=?, IsHidden=0, GoogleUnreadGuids=? WHERE GoogleUrl=? AND IsFromGoogle=1 AND IsHidden=1", folderId, feedTitle, googleUrl, googleUnreadGuidsData];
-		} else {
-			[db executeUpdate:@"INSERT INTO feed (FolderId, Title, IsFromGoogle, GoogleUrl, GoogleUnreadGuids) VALUES (?, ?, 1, ?, ?)", folderId, feedTitle, googleUrl, googleUnreadGuidsData];
-			
-			rowId = [db lastInsertRowId];
-		}
-		
-	} else {
-		regularUrl = url;
-		
-		[db executeUpdate:@"INSERT INTO feed (FolderId, Url, Title) VALUES (?, ?, ?)", folderId, regularUrl, feedTitle];
-		
-		rowId = [db lastInsertRowId];
-	}
+	[db executeUpdate:@"INSERT INTO feed (FolderId, Url, Title) VALUES (?, ?, ?)", folderId, url, feedTitle];
+	
+	rowId = [db lastInsertRowId];
 	
 	[db close];
 	
@@ -3057,10 +1925,7 @@ static NSArray *preferencesToolbarItems;
 	
 	[newSub setTitle:feedTitle];
 	[newSub setDbId:rowId];
-	[newSub setUrl:regularUrl];
-	[newSub setIsFromGoogle:isFromGoogle];
-	[newSub setGoogleUrl:googleUrl];
-	[newSub setGoogleUnreadGuids:googleUnreadGuids];
+	[newSub setUrl:url];
 	
 	if (hasHiddenEquivalent == NO) {
 		[feedLookupDict setObject:newSub forKey:[NSNumber numberWithInteger:[newSub dbId]]];
@@ -3077,14 +1942,8 @@ static NSArray *preferencesToolbarItems;
 	[self sourceListDidChange];
 	[self restoreSourceListSelections];
 	
-	if (isFromGoogle == NO) {
-		if (shouldRefresh) {
-			[self queueSyncRequestForSpecificFeeds:[NSMutableArray arrayWithObject:newSub]];
-		}
-	} else {
-		if (propagate) {
-			[self queueGoogleAddFeedForGoogleUrl:googleUrl addToDb:YES];
-		}
+	if (shouldRefresh) {
+		[self queueSyncRequestForSpecificFeeds:[NSMutableArray arrayWithObject:newSub]];
 	}
 	
 	return newSub;
@@ -3161,7 +2020,7 @@ static NSArray *preferencesToolbarItems;
 	}
 }
 
-- (void)deleteSourceListItem:(CLSourceListItem *)item propagateChangesToGoogle:(BOOL)propagate {
+- (void)deleteSourceListItem:(CLSourceListItem *)item {
 	
 	if (item == nil) {
 		return;
@@ -3264,11 +2123,6 @@ static NSArray *preferencesToolbarItems;
 	
 	[self sourceListDidChange];
 	[self restoreSourceListSelections];
-	
-	// does this item (or its children) need to be deleted on google too?
-	if (propagate) {
-		[self queueDeleteFromGoogleForSourceListItem:item];
-	}
 }
 
 - (void)didDeleteFeed:(CLSourceListFeed *)feed {
@@ -3296,19 +2150,6 @@ static NSArray *preferencesToolbarItems;
 	}
 }
 
-- (void)queueDeleteFromGoogleForSourceListItem:(CLSourceListItem *)item {
-	if ([item isKindOfClass:[CLSourceListFeed class]]) {
-		CLSourceListFeed *feed = (CLSourceListFeed *)item;
-		if ([feed isFromGoogle] && [feed googleUrl] != nil && [[feed googleUrl] length] > 0) {
-			[self queueGoogleDeleteFeedForGoogleUrl:[feed googleUrl] addToDb:YES];
-		}
-	} else {
-		for (CLSourceListItem *child in [item children]) {
-			[self queueDeleteFromGoogleForSourceListItem:child];
-		}
-	}
-}
-
 - (void)markAllAsReadForSourceListItem:(CLSourceListItem *)item orNewItems:(BOOL)newItems orStarredItems:(BOOL)starredItems orPostsOlderThan:(NSNumber *)timestamp {
 	
 	if (item == nil && newItems == NO && starredItems == NO && timestamp == nil) {
@@ -3325,15 +2166,15 @@ static NSArray *preferencesToolbarItems;
 	FMResultSet *rs = nil;
 	
 	if (newItems) {
-		rs = [db executeQuery:@"SELECT post.Id, post.Guid, post.FeedId, feed.IsFromGoogle, feed.GoogleUrl FROM post, feed WHERE post.FeedId=feed.Id AND post.IsRead=0"];
+		rs = [db executeQuery:@"SELECT post.Id, post.Guid, post.FeedId, FROM post, feed WHERE post.FeedId=feed.Id AND post.IsRead=0"];
 	} else if (starredItems) {
-		rs = [db executeQuery:@"SELECT post.Id, post.Guid, post.FeedId, feed.IsFromGoogle, feed.GoogleUrl FROM post, feed WHERE post.FeedId=feed.Id AND post.IsRead=0 AND post.IsStarred=1"];
+		rs = [db executeQuery:@"SELECT post.Id, post.Guid, post.FeedId, FROM post, feed WHERE post.FeedId=feed.Id AND post.IsRead=0 AND post.IsStarred=1"];
 	} else if (item != nil && [item isKindOfClass:[CLSourceListFeed class]]) {
-		rs = [db executeQuery:@"SELECT post.Id, post.Guid, post.FeedId, feed.IsFromGoogle, feed.GoogleUrl FROM post, feed WHERE post.FeedId=feed.Id AND post.FeedId=? AND post.IsRead=0", [NSNumber numberWithInteger:[(CLSourceListFeed *)item dbId]]];
+		rs = [db executeQuery:@"SELECT post.Id, post.Guid, post.FeedId, FROM post, feed WHERE post.FeedId=feed.Id AND post.FeedId=? AND post.IsRead=0", [NSNumber numberWithInteger:[(CLSourceListFeed *)item dbId]]];
 	} else if (item != nil && [item isKindOfClass:[CLSourceListFolder class]]) {
-		rs = [db executeQuery:[NSString stringWithFormat:@"SELECT post.Id, post.Guid, post.FeedId, feed.IsFromGoogle, feed.GoogleUrl FROM post, feed WHERE post.Id IN (SELECT post.Id FROM post, feed, folder WHERE post.FeedId=feed.Id AND feed.FolderId=folder.Id AND folder.Path LIKE '%@%%') AND post.FeedId=feed.Id AND post.IsRead=0", [(CLSourceListFolder *)item path]]];
+		rs = [db executeQuery:[NSString stringWithFormat:@"SELECT post.Id, post.Guid, post.FeedId, FROM post, feed WHERE post.Id IN (SELECT post.Id FROM post, feed, folder WHERE post.FeedId=feed.Id AND feed.FolderId=folder.Id AND folder.Path LIKE '%@%%') AND post.FeedId=feed.Id AND post.IsRead=0", [(CLSourceListFolder *)item path]]];
 	} else if (timestamp != nil) {
-		rs = [db executeQuery:@"SELECT post.Id, post.Guid, post.FeedId, feed.IsFromGoogle, feed.GoogleUrl FROM post, feed WHERE post.FeedId=feed.Id AND post.IsRead=0 AND post.Received < ?", timestamp];
+		rs = [db executeQuery:@"SELECT post.Id, post.Guid, post.FeedId, FROM post, feed WHERE post.FeedId=feed.Id AND post.IsRead=0 AND post.Received < ?", timestamp];
 	}
 	
 	while ([rs next]) {
@@ -3341,8 +2182,6 @@ static NSArray *preferencesToolbarItems;
 		[post setValue:[NSNumber numberWithInteger:[rs longForColumn:@"Id"]] forKey:@"Id"];
 		[post setValue:[rs stringForColumn:@"Guid"] forKey:@"Guid"];
 		[post setValue:[NSNumber numberWithInteger:[rs longForColumn:@"FeedId"]] forKey:@"FeedId"];
-		[post setValue:[NSNumber numberWithBool:[rs boolForColumn:@"IsFromGoogle"]] forKey:@"IsFromGoogle"];
-		[post setValue:[rs stringForColumn:@"GoogleUrl"] forKey:@"GoogleUrl"];
 		[posts addObject:post];
 	}
 	
@@ -3352,84 +2191,39 @@ static NSArray *preferencesToolbarItems;
 	if ([posts count] > 0) {
 		for (NSDictionary *post in posts) {
 			[self markViewItemsAsReadForPostDbId:[[post objectForKey:@"Id"] integerValue]];
-			
-			if ([[post objectForKey:@"IsFromGoogle"] boolValue]) {
-				[self queueGoogleMarkReadOperationForGoogleUrl:[post objectForKey:@"GoogleUrl"] itemGuid:[post objectForKey:@"Guid"] addToDb:YES];
-			}
 		}
-				
+		
 		BOOL doManualUpdate = NO;
 		
 		if (newItems) {
-			
 			[self runDatabaseUpdateOnBackgroundThread:@"UPDATE post SET IsRead=1", nil];
-			
-			NSMutableSet *googleUnreadGuids = [[NSMutableSet alloc] init];
-			NSData *googleUnreadGuidsData = [NSArchiver archivedDataWithRootObject:googleUnreadGuids];
-			
-			NSArray *googleFeeds = [self extractGoogleFeedsFrom:subscriptionList];
-			
-			for (CLSourceListFeed *googleFeed in googleFeeds) {
-				[googleFeed setGoogleUnreadGuids:googleUnreadGuids];
-			}
-			
-			[googleUnreadGuids release];
-			
 			[self runDatabaseUpdateOnBackgroundThread:@"UPDATE feed SET UnreadCount=0", nil];
-			[self runDatabaseUpdateOnBackgroundThread:@"UPDATE feed SET GoogleUnreadGuids=? WHERE IsFromGoogle=1", googleUnreadGuidsData, nil];
-			
 		} else if (starredItems) {
-			
 			[self runDatabaseUpdateOnBackgroundThread:@"UPDATE post SET IsRead=1 WHERE IsStarred=1", nil];
 			doManualUpdate = YES;
-			
 		} else if (item != nil && [item isKindOfClass:[CLSourceListFeed class]]) {
-			
 			NSNumber *dbIdNum = [NSNumber numberWithInteger:[(CLSourceListFeed *)item dbId]];
 			[self runDatabaseUpdateOnBackgroundThread:@"UPDATE post SET IsRead=1 WHERE FeedId=? AND IsRead=0", dbIdNum, nil];
 			[self runDatabaseUpdateOnBackgroundThread:@"UPDATE feed SET UnreadCount=0 WHERE Id=?", dbIdNum, nil];
-			
-			if ([(CLSourceListFeed *)item isFromGoogle]) {
-				NSMutableSet *googleUnreadGuids = [[NSMutableSet alloc] init];
-				NSData *googleUnreadGuidsData = [NSArchiver archivedDataWithRootObject:googleUnreadGuids];
-				
-				[(CLSourceListFeed *)item setGoogleUnreadGuids:googleUnreadGuids];
-				[googleUnreadGuids release];
-				
-				[self runDatabaseUpdateOnBackgroundThread:@"UPDATE feed SET GoogleUnreadGuids=? WHERE Id=?", googleUnreadGuidsData, dbIdNum, nil];
-			}
-			
 		} else if (item != nil && [item isKindOfClass:[CLSourceListFolder class]]) {
-			
 			[self runDatabaseUpdateOnBackgroundThread:[NSString stringWithFormat:@"UPDATE post SET IsRead=1 WHERE Id IN (SELECT post.Id FROM post, feed, folder WHERE post.FeedId=feed.Id AND feed.FolderId=folder.Id AND folder.Path LIKE '%@%%') AND IsRead=0", [(CLSourceListFolder *)item path]], nil];
 			doManualUpdate = YES;
-			
 		} else if (timestamp != nil) {
-			
 			[self runDatabaseUpdateOnBackgroundThread:@"UPDATE post SET IsRead=1 WHERE IsRead=0 AND Received < ?", timestamp, nil];
 			doManualUpdate = YES;
 		}
 		
 		if (doManualUpdate) {
 			NSMutableSet *feedsToUpdateUnreadCount = [NSMutableSet set];
-			NSMutableSet *feedsToUpdateGoogleUnreadGuids = [NSMutableSet set];
 			
 			for (NSDictionary *post in posts) {
 				NSNumber *feedId = [post objectForKey:@"FeedId"];
-				BOOL isFromGoogle = [[post objectForKey:@"IsFromGoogle"] boolValue];
 				
 				if (feedId != nil && [feedId integerValue] > 0) {
 					CLSourceListFeed *feed = [self feedForDbId:[feedId integerValue]];
 					
 					if (feed != nil) {
 						[feedsToUpdateUnreadCount addObject:feed];
-						
-						if (isFromGoogle) {
-							NSMutableSet *googleUnreadGuids = [feed googleUnreadGuids];
-							[googleUnreadGuids removeObject:[post objectForKey:@"Guid"]];
-							
-							[feedsToUpdateGoogleUnreadGuids addObject:feed];
-						}
 					}
 				}
 			}
@@ -3437,12 +2231,6 @@ static NSArray *preferencesToolbarItems;
 			for (CLSourceListFeed *feed in feedsToUpdateUnreadCount) {
 				NSNumber *feedId = [NSNumber numberWithInteger:[feed dbId]];
 				[self runDatabaseUpdateOnBackgroundThread:UNREAD_COUNT_QUERY, feedId, feedId, nil];
-			}
-			
-			for (CLSourceListFeed *feed in feedsToUpdateGoogleUnreadGuids) {
-				NSNumber *feedId = [NSNumber numberWithInteger:[feed dbId]];
-				NSData *googleUnreadGuidsData = [NSArchiver archivedDataWithRootObject:[feed googleUnreadGuids]];
-				[self runDatabaseUpdateOnBackgroundThread:@"UPDATE feed SET GoogleUnreadGuids=? WHERE Id=?", googleUnreadGuidsData, feedId, nil];
 			}
 		}
 		
@@ -3473,42 +2261,26 @@ static NSArray *preferencesToolbarItems;
 	}
 }
 
-- (void)refreshSourceListItem:(CLSourceListItem *)item onlyGoogle:(BOOL)onlyGoogle {
+- (void)refreshSourceListItem:(CLSourceListItem *)item {
 	
 	if (item == nil) {
 		return;
 	}
 	
-	if (onlyGoogle == NO) {
-		if ([item isKindOfClass:[CLSourceListFeed class]]) {
-			if ([(CLSourceListFeed *)item isFromGoogle] == NO) {
-				[self queueSyncRequestForSpecificFeeds:[NSMutableArray arrayWithObject:item]];
-			}
-		} else if ([item isKindOfClass:[CLSourceListFolder class]]) {
-			[self queueSyncRequestForSpecificFeeds:[self extractNonGoogleFeedsFrom:[item children]]];
-		}
-	}
-	
 	if ([item isKindOfClass:[CLSourceListFeed class]]) {
-		if ([(CLSourceListFeed *)item isFromGoogle]) {
-			[self refreshSourceListFeed:(CLSourceListFeed *)item];
-		}
+		[self refreshSourceListFeed:(CLSourceListFeed *)item];
 	} else if ([item isKindOfClass:[CLSourceListFolder class]]) {
-		[self refreshSourceListFolder:(CLSourceListFolder *)item onlyGoogle:YES];
+		[self refreshSourceListFolder:(CLSourceListFolder *)item];
 	}
 }
 
 - (void)refreshSourceListFeed:(CLSourceListFeed *)feed {
-	if ([feed isFromGoogle]) {
-		[self queueSyncRequestForGoogleSingleFeed:feed];
-	} else {
-		[self queueSyncRequestForSpecificFeeds:[NSMutableArray arrayWithObject:feed]];
-	}
+	[self queueSyncRequestForSpecificFeeds:[NSMutableArray arrayWithObject:feed]];
 }
 
-- (void)refreshSourceListFolder:(CLSourceListFolder *)folder onlyGoogle:(BOOL)onlyGoogle {
+- (void)refreshSourceListFolder:(CLSourceListFolder *)folder {
 	for (CLSourceListItem *child in [folder children]) {
-		[self refreshSourceListItem:child onlyGoogle:onlyGoogle];
+		[self refreshSourceListItem:child];
 	}
 }
 
@@ -3602,7 +2374,7 @@ static NSArray *preferencesToolbarItems;
 	}
 }
 
-- (void)moveItem:(CLSourceListItem *)item toFolder:(CLSourceListFolder *)folder propagateChangesToGoogle:(BOOL)propagate {
+- (void)moveItem:(CLSourceListItem *)item toFolder:(CLSourceListFolder *)folder {
 	
 	NSString *previousFolder = nil;
 	
@@ -3685,46 +2457,17 @@ static NSArray *preferencesToolbarItems;
 	[self sourceListDidChange];
 	[self refreshTabsForAncestorsOf:item];
 	[self restoreSourceListSelections];
-	
-	if (propagate) {
-		if ([item isKindOfClass:[CLSourceListFeed class]]) {
-			CLSourceListFeed *feed = (CLSourceListFeed *)item;
-			
-			if ([feed isFromGoogle] && [feed googleUrl] != nil && [[feed googleUrl] length] > 0) {
-				NSString *googleUrl = [feed googleUrl];
-				
-				if (previousFolder != nil && [previousFolder length] > 0) {
-					[self queueGoogleRemoveFromFolderOperationForGoogleUrl:googleUrl folder:previousFolder addToDb:YES];
-				}
-				
-				if (folder != nil) {
-					[self queueGoogleAddToFolderOperationForGoogleUrl:googleUrl folder:[folder title] addToDb:YES];
-				}
-			}
-		}
-	}
 }
 
-- (void)addStarToPost:(CLPost *)post propagateChangesToGoogle:(BOOL)propagate {
-	
+- (void)addStarToPost:(CLPost *)post {
 	[self runDatabaseUpdateOnBackgroundThread:@"UPDATE post SET IsStarred=1 WHERE Id=?", [NSNumber numberWithInteger:[post dbId]], nil];
 	
 	[post setIsStarred:YES];
 	
 	[self addPostsToAllWindows:[NSArray arrayWithObject:post] forFeed:nil orNewItems:NO orStarredItems:YES];
-	
-	if (propagate) {
-		CLSourceListFeed *feed = [self feedForDbId:[post feedDbId]];
-		
-		if (feed != nil && [feed isFromGoogle]) {
-			if ([feed googleUrl] != nil && [[feed googleUrl] length] > 0 && [post guid] != nil && [[post guid] length] > 0) {
-				[self queueGoogleAddStarOperationForGoogleUrl:[feed googleUrl] itemGuid:[post guid] addToDb:YES];
-			}
-		}
-	}
 }
 
-- (void)removeStarFromPost:(CLPost *)post propagateChangesToGoogle:(BOOL)propagate {
+- (void)removeStarFromPost:(CLPost *)post {
 	
 	if ([post dbId] <= 0 || [post feedDbId] <= 0) {
 		return;
@@ -3733,8 +2476,6 @@ static NSArray *preferencesToolbarItems;
 	[post retain];
 	
 	BOOL isForHiddenFeed = NO;
-	BOOL isFromGoogle = NO;
-	NSString *googleUrl = nil;
 	
 	FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
 	
@@ -3746,8 +2487,6 @@ static NSArray *preferencesToolbarItems;
 	
 	if ([rs next]) {
 		isForHiddenFeed = [rs boolForColumn:@"IsHidden"];
-		isFromGoogle = [rs boolForColumn:@"IsFromGoogle"];
-		googleUrl = [rs stringForColumn:@"GoogleUrl"];
 	}
 	
 	[rs close];
@@ -3785,12 +2524,6 @@ static NSArray *preferencesToolbarItems;
 	
 	[self removeStarredPostFromAllWindows:post];
 	
-	if (propagate) {
-		if (isFromGoogle && googleUrl != nil && [googleUrl length] > 0 && [post guid] != nil && [[post guid] length] > 0) {
-			[self queueGoogleRemoveStarOperationForGoogleUrl:googleUrl itemGuid:[post guid] addToDb:YES];
-		}
-	}
-	
 	[post release];
 }
 
@@ -3808,7 +2541,6 @@ static NSArray *preferencesToolbarItems;
 	
 	[self updatePreferencesFeedReaderPopUp];
 	[self updatePreferencesFontTextFields];
-	[self updatePreferencesGoogleSyncTextField];
 	
 	[preferencesWindow center];
 	[preferencesWindow makeKeyAndOrderFront:self];
@@ -3921,26 +2653,6 @@ static NSArray *preferencesToolbarItems;
 	}
 }
 
-- (IBAction)setupGoogleSync:(id)sender {
-	[googleSyncEmailTextField setStringValue:@""];
-	[googleSyncPasswordTextField setStringValue:@""];
-	
-	NSString *googleEmail = [SyndicationAppDelegate miscellaneousValueForKey:MISCELLANEOUS_GOOGLE_EMAIL_KEY];
-	NSString *googlePassword = [CLKeychainHelper getPasswordForAccount:googleEmail];
-	
-	if (googleEmail != nil) {
-		[googleSyncEmailTextField setStringValue:googleEmail];
-	}
-	
-	if (googlePassword != nil) {
-		[googleSyncPasswordTextField setStringValue:googlePassword];
-	}
-	
-	[googleSyncWindow makeFirstResponder:googleSyncEmailTextField];
-	[googleSyncWindow center];
-	[googleSyncWindow makeKeyAndOrderFront:self];
-}
-
 - (IBAction)importOPML:(id)sender {
 	
 	if ([opmlLoadingWindow isVisible] == NO) {
@@ -3961,11 +2673,6 @@ static NSArray *preferencesToolbarItems;
 			if (opmlString == nil) {
 				[CLErrorHelper createAndDisplayError:@"There was an error importing the OPML file."];
 				
-				if (showingWelcomeWindow) {
-					[welcomeWindow center];
-					[welcomeWindow makeKeyAndOrderFront:self];
-				}
-				
 				return;
 			}
 			
@@ -3973,11 +2680,6 @@ static NSArray *preferencesToolbarItems;
 			
 			if (rootNode == nil) {
 				[CLErrorHelper createAndDisplayError:@"There was an error importing the OPML file."];
-				
-				if (showingWelcomeWindow) {
-					[welcomeWindow center];
-					[welcomeWindow makeKeyAndOrderFront:self];
-				}
 				
 				return;
 			}
@@ -3994,18 +2696,8 @@ static NSArray *preferencesToolbarItems;
 			[opmlLoadingWindow close];
 			[opmlLoadingProgressIndicator stopAnimation:self];
 			
-			if (showingWelcomeWindow) {
-				[self newWindow];
-				[self setShowingWelcomeWindow:NO];
-			}
-			
 			[self updateMenuItems];
 			
-		} else {
-			if (showingWelcomeWindow) {
-				[welcomeWindow center];
-				[welcomeWindow makeKeyAndOrderFront:self];
-			}
 		}
 	}
 }
@@ -4044,9 +2736,7 @@ static NSArray *preferencesToolbarItems;
 }
 
 - (IBAction)refreshSubscriptions:(id)sender {
-	[self queueNonGoogleSyncRequest];
-	[self queueGoogleSyncRequest];
-	[self queueGoogleStarredSyncRequest];
+	[self queueAllFeedsSyncRequest];
 }
 
 - (IBAction)reloadPage:(id)sender {
@@ -4139,7 +2829,7 @@ static NSArray *preferencesToolbarItems;
 			
 			if (post != nil) {
 				if (![post isStarred]) {
-					[self addStarToPost:post propagateChangesToGoogle:YES];
+					[self addStarToPost:post];
 				}
 			}
 		}
@@ -4173,100 +2863,9 @@ static NSArray *preferencesToolbarItems;
 			
 			if (post != nil) {
 				if ([post isStarred]) {
-					[self removeStarFromPost:post propagateChangesToGoogle:YES];
+					[self removeStarFromPost:post];
 				}
 			}
-		}
-	}
-}
-
-- (NSString *)extractLinkForSocial {
-	NSString *linkString = nil;
-	NSWindow *keyWin = [NSApp keyWindow];
-	
-	if ([self isContentWindow:keyWin]) {
-		CLWindowController *windowController = [keyWin windowController];
-		CLTabViewItem *tabViewItem = [[windowController tabView] selectedTabViewItem];
-		
-		if (tabViewItem != nil) {
-			if ([tabViewItem tabType] == CLTimelineType) {
-				CLTimelineView *timelineView = [tabViewItem timelineView];
-				
-				if ([timelineView selectedItem] != nil) {
-					linkString = [[timelineView selectedItem] postUrl];
-				}
-				
-			} else if ([tabViewItem tabType] == CLClassicType) {
-				CLClassicView *classicView = [tabViewItem classicView];
-				
-				if ([[classicView tableView] selectedRow] >= 0) {
-					linkString = [[[classicView posts] objectAtIndex:[[classicView tableView] selectedRow]] link];
-				}
-			}
-		}
-	}
-	
-	if (linkString != nil) {
-		linkString = [linkString clUrlEncodedParameterString];
-	}
-	
-	return linkString;
-}
-
-- (IBAction)email:(id)sender {
-	NSString *linkString = [self extractLinkForSocial];
-	
-	if (linkString != nil) {
-		NSString *urlString = [NSString stringWithFormat:@"mailto:?body=%@", linkString];
-		NSURL *socialUrl = [NSURL URLWithString:urlString];
-		[[NSWorkspace sharedWorkspace] openURL:socialUrl];
-	}
-}
-
-- (IBAction)facebook:(id)sender {
-	NSWindow *keyWin = [NSApp keyWindow];
-	
-	if ([self isContentWindow:keyWin]) {
-		CLWindowController *windowController = [keyWin windowController];
-		NSString *linkString = [self extractLinkForSocial];
-		
-		if (linkString != nil) {
-			NSString *urlString = [NSString stringWithFormat:@"http://www.facebook.com/sharer.php?u=%@", linkString];
-			NSURL *socialUrl = [NSURL URLWithString:urlString];
-			NSURLRequest *socialRequest = [NSURLRequest requestWithURL:socialUrl];
-			[windowController openNewWebTabWith:socialRequest selectTab:YES];
-		}
-	}
-}
-
-- (IBAction)twitter:(id)sender {
-	NSWindow *keyWin = [NSApp keyWindow];
-	
-	if ([self isContentWindow:keyWin]) {
-		CLWindowController *windowController = [keyWin windowController];
-		NSString *linkString = [self extractLinkForSocial];
-		
-		if (linkString != nil) {
-			NSString *urlString = [NSString stringWithFormat:@"http://twitter.com/home?status=%@", linkString];
-			NSURL *socialUrl = [NSURL URLWithString:urlString];
-			NSURLRequest *socialRequest = [NSURLRequest requestWithURL:socialUrl];
-			[windowController openNewWebTabWith:socialRequest selectTab:YES];
-		}
-	}
-}
-
-- (IBAction)instapaper:(id)sender {
-	NSWindow *keyWin = [NSApp keyWindow];
-	
-	if ([self isContentWindow:keyWin]) {
-		CLWindowController *windowController = [keyWin windowController];
-		NSString *linkString = [self extractLinkForSocial];
-		
-		if (linkString != nil) {
-			NSString *urlString = [NSString stringWithFormat:@"http://www.instapaper.com/edit?url=%@", linkString];
-			NSURL *socialUrl = [NSURL URLWithString:urlString];
-			NSURLRequest *socialRequest = [NSURLRequest requestWithURL:socialUrl];
-			[windowController openNewWebTabWith:socialRequest selectTab:YES];
 		}
 	}
 }
@@ -4305,18 +2904,6 @@ static NSArray *preferencesToolbarItems;
 	if (acknowledgmentsURL != nil) {
 		NSURLRequest *request = [NSURLRequest requestWithURL:acknowledgmentsURL];
 		[windowController openNewWebTabWith:request selectTab:YES];
-	}
-}
-
-- (IBAction)emailSupport:(id)sender {
-	NSString *email = @"support@calv.in";
-	NSString *subject = [@"Syndication support request" clUrlEncodedParameterString];
-	NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"mailto:%@?subject=%@", email, subject]];
-	
-	BOOL response = [[NSWorkspace sharedWorkspace] openURL:url];
-	
-	if (response == NO) {
-		[CLErrorHelper createAndDisplayError:[NSString stringWithFormat:@"Please send an email to %@.", email]];
 	}
 }
 
@@ -4366,119 +2953,6 @@ static NSArray *preferencesToolbarItems;
 	if ([windowController selectSourceListItem:[windowController sourceListStarredItems]] == NO) {
 		[windowController openItemInCurrentTab:[windowController sourceListStarredItems] orQuery:nil];
 	}
-}
-
-- (IBAction)cancelGoogleSync:(id)sender {
-	[googleSyncWindow close];
-	
-	if (showingWelcomeWindow) {
-		[welcomeWindow center];
-		[welcomeWindow makeKeyAndOrderFront:self];
-	}
-}
-
-- (IBAction)submitGoogleSync:(id)sender {
-	[googleSyncWindow close];
-	
-	NSString *email = [googleSyncEmailTextField stringValue];
-	NSString *password = [googleSyncPasswordTextField stringValue];
-	
-	if (email != nil && [email length] == 0) {
-		email = nil;
-	}
-	
-	if (password != nil && [password length] == 0) {
-		password = nil;
-	}
-	
-	NSString *previousEmail = [SyndicationAppDelegate miscellaneousValueForKey:MISCELLANEOUS_GOOGLE_EMAIL_KEY];
-	
-	[CLKeychainHelper setPassword:password forAccount:email];
-	[SyndicationAppDelegate miscellaneousSetValue:email forKey:MISCELLANEOUS_GOOGLE_EMAIL_KEY];
-	
-	[self setGoogleAuth:nil];
-	
-	NSArray *operationList = [googleOperationQueue operations];
-	
-	for (CLGoogleOperation *operation in operationList) {
-		[operation setGoogleAuth:nil];
-	}
-	
-	BOOL changedAccounts = ((email != nil && previousEmail == nil) || (email == nil && previousEmail != nil) || (email != nil && previousEmail != nil && [email isEqual:previousEmail] == NO));
-	
-	if (changedAccounts) {
-		FMDatabase *db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
-		
-		if (![db open]) {
-			[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
-		}
-		
-		FMResultSet *rs = [db executeQuery:@"SELECT * FROM feed WHERE IsFromGoogle=1"];
-		
-		NSMutableArray *feedIdList = [NSMutableArray array];
-		
-		while ([rs next]) {
-			[feedIdList addObject:[NSNumber numberWithInteger:[rs longForColumn:@"Id"]]];
-		}
-		
-		[rs close];
-		[db close];
-		
-		for (NSNumber *feedId in feedIdList) {
-			 CLSourceListFeed *feed = [self feedForDbId:[feedId integerValue]];
-			 [self deleteSourceListItem:feed propagateChangesToGoogle:NO];
-		}
-		
-		[googleOperationQueue cancelAllOperations];
-		
-		db = [FMDatabase databaseWithPath:[CLDatabaseHelper pathForDatabaseFile]];
-		
-		if (![db open]) {
-			[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
-		}
-		
-		[db executeUpdate:@"DELETE FROM googleOperations"];
-		
-		[db close];
-		
-		if (googleStuckOperation != nil) {
-			[googleStuckOperation completeOperation];
-			[self setGoogleStuckOperation:nil];
-		}
-		
-	} else {
-		if (googleStuckOperation != nil) {
-			[googleStuckOperation restartOperation];
-			[self setGoogleStuckOperation:nil];
-		}
-	}
-	
-	[self queueGoogleSyncRequest];
-	[self queueGoogleStarredSyncRequest];
-	
-	if (showingWelcomeWindow) {
-		[self newWindow];
-		[self setShowingWelcomeWindow:NO];
-	}
-	
-	[self updatePreferencesGoogleSyncTextField];
-}
-
-- (IBAction)welcomeSetupGoogleSync:(id)sender {
-	[welcomeWindow close];
-	[self setupGoogleSync:self];
-}
-
-- (IBAction)welcomeImportOPML:(id)sender {
-	[welcomeWindow close];
-	[self importOPML:self];
-}
-
-- (IBAction)welcomeClose:(id)sender {
-	[welcomeWindow close];
-	[self setShowingWelcomeWindow:NO];
-	
-	[self newWindow];
 }
 
 
@@ -4923,9 +3397,6 @@ static NSArray *preferencesToolbarItems;
 	} else if ([itemIdentifier isEqual:PREFERENCES_TOOLBAR_FONTS_ITEM]) {
 		[toolbarItem setLabel:@"Fonts"];
 		[toolbarItem setImage:[NSImage imageNamed:@"ToolbarItemFonts.tiff"]];
-	} else if ([itemIdentifier isEqual:PREFERENCES_TOOLBAR_ADVANCED_ITEM]) {
-		[toolbarItem setLabel:@"Advanced"];
-		[toolbarItem setImage:[NSImage imageNamed:@"NSAdvanced"]];
 	}
 	
 	[toolbarItem setTarget:self];
@@ -4955,8 +3426,6 @@ static NSArray *preferencesToolbarItems;
 		contentHeight = PREFERENCES_TOOLBAR_GENERAL_HEIGHT;
 	} else if ([[toolbarItem itemIdentifier] isEqual:PREFERENCES_TOOLBAR_FONTS_ITEM]) {
 		contentHeight = PREFERENCES_TOOLBAR_FONTS_HEIGHT;
-	} else if ([[toolbarItem itemIdentifier] isEqual:PREFERENCES_TOOLBAR_ADVANCED_ITEM]) {
-		contentHeight = PREFERENCES_TOOLBAR_ADVANCED_HEIGHT;
 	}
 	
 	NSInteger heightDifference = contentHeight - preferencesContentHeight;
@@ -4997,10 +3466,6 @@ static NSArray *preferencesToolbarItems;
 	NSFontManager *fontManager = [NSFontManager sharedFontManager];
 	[fontManager setSelectedFont:bodyFont isMultiple:NO];
 	[fontManager orderFrontFontPanel:self];
-}
-
-- (IBAction)preferencesEditCredentials:(id)sender {
-	[self setupGoogleSync:self];
 }
 
 - (void)preferencesSetDefaultFeedReader:(NSMenuItem *)menuItem {
@@ -5143,16 +3608,6 @@ static NSArray *preferencesToolbarItems;
 	[preferencesBodyTextField setStringValue:[NSString stringWithFormat:@"%@ %@", nameDisplay, sizeDisplay]];
 }
 
-- (void)updatePreferencesGoogleSyncTextField {
-	NSString *email = [SyndicationAppDelegate miscellaneousValueForKey:MISCELLANEOUS_GOOGLE_EMAIL_KEY];
-	
-	if (email == nil || [email length] == 0) {
-		[preferencesGoogleSyncTextField setStringValue:@"(none specified)"];
-	} else {
-		[preferencesGoogleSyncTextField setStringValue:email];
-	}
-}
-
 - (void)updateContentFonts {
 	for (CLWindowController *windowController in windowControllers) {
 		CLTabView *tabView = [windowController tabView];
@@ -5280,7 +3735,7 @@ static NSArray *preferencesToolbarItems;
 		[db close];
 		
 		if (hasFinishedLaunching) {
-			[self addSubscriptionForUrlString:urlStr withTitle:nil toFolder:nil isFromGoogle:NO propagateChangesToGoogle:NO refreshImmediately:YES];
+			[self addSubscriptionForUrlString:urlStr withTitle:nil toFolder:nil refreshImmediately:YES];
 		} else {
 			[self setFeedEventString:urlStr];
 		}

@@ -11,7 +11,7 @@
 
 @implementation CLUrlFetcher
 
-+ (NSData *)fetchUrlString:(NSString *)urlString postData:(NSData *)postData usingAuth:(NSString *)auth returnNilOnFailure:(BOOL)nilOnFail urlResponse:(NSURLResponse **)urlResponse {
++ (NSData *)fetchUrlString:(NSString *)urlString postData:(NSData *)postData returnNilOnFailure:(BOOL)nilOnFail urlResponse:(NSURLResponse **)urlResponse {
 	
 	NSURL *fetchUrl = [NSURL URLWithString:urlString];
 	
@@ -22,10 +22,6 @@
 	NSMutableURLRequest *fetchUrlRequest = [NSMutableURLRequest requestWithURL:fetchUrl
 																   cachePolicy:NSURLRequestReloadIgnoringLocalAndRemoteCacheData
 															   timeoutInterval:URL_REQUEST_TIMEOUT];
-	
-	if (auth != nil) {
-		[fetchUrlRequest setValue:[NSString stringWithFormat:@"GoogleLogin auth=%@", auth] forHTTPHeaderField:@"Authorization"];
-	}
 	
 	[fetchUrlRequest setHTTPShouldHandleCookies:NO];
 	

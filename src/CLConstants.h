@@ -39,8 +39,6 @@
 #define SOURCE_LIST_ICON_PADDING_RIGHT 4
 #define SOURCE_LIST_BADGE_PADDING 6
 
-#define MISCELLANEOUS_GOOGLE_EMAIL_KEY @"MiscellaneousGoogleEmail"
-#define MISCELLANEOUS_ADD_TO_GOOGLE_KEY @"MiscellaneousAddToGoogle"
 #define MISCELLANEOUS_LAST_FEED_SYNC_KEY @"MiscellaneousLastFeedSync"
 #define MISCELLANEOUS_DATABASE_VERSION @"MiscellaneousDatabaseVersion"
 #define MISCELLANEOUS_VIEW_MODE @"MiscellaneousViewMode"
@@ -51,12 +49,8 @@
 #define MISCELLANEOUS_BODY_FONT_SIZE @"MiscellaneousBodyFontSize"
 #define MISCELLANEOUS_CLASSIC_VIEW_DIVIDER_POSITION @"MiscellaneousClassicViewDividerPosition"
 
-typedef enum {CLAddFeedType, CLAddStarType, CLAddToFolderType, CLDeleteFeedType, CLFeedTitleType, CLMarkReadType, CLRemoveFromFolderType, CLRemoveStarType} CLDatabaseGoogleOperationType;
-
 enum {CLEscapeCharacter = 27, CLSpaceCharacter = 32};
 
-#define GOOGLE_REQUEST_PAUSE 0.1
-#define GOOGLE_FETCH_SIZE 200
 #define OFFLINE_RETRY_PAUSE 5.0
 #define FEED_REQUEST_DELAY 5.0
 

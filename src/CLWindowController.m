@@ -73,7 +73,6 @@
 @synthesize dragDelayTimer;
 @synthesize feedSheetController;
 @synthesize feedSheetTextField;
-@synthesize feedSheetGoogleCheckbox;
 @synthesize sourceListDragItem;
 @synthesize sourceListContextMenu;
 @synthesize searchField;
@@ -610,55 +609,14 @@
 
 - (IBAction)addSubscription:(id)sender {
 	[feedSheetTextField setStringValue:@""];
-	[feedSheetGoogleCheckbox setState:NSOnState];
-	
-	NSString *googleEmail = [SyndicationAppDelegate miscellaneousValueForKey:MISCELLANEOUS_GOOGLE_EMAIL_KEY];
-	
-	if (googleEmail != nil && [googleEmail length] > 0) {
-		
-		BOOL addToGooglePreference = YES;
-		NSString *addToGoogleString = [SyndicationAppDelegate miscellaneousValueForKey:MISCELLANEOUS_ADD_TO_GOOGLE_KEY];
-		
-		if (addToGoogleString != nil) {
-			addToGooglePreference = [addToGoogleString boolValue];
-		}
-		
-		if (addToGooglePreference) {
-			[feedSheetGoogleCheckbox setState:NSOnState];
-		} else {
-			[feedSheetGoogleCheckbox setState:NSOffState];
-		}
-		
-		[feedSheetGoogleCheckbox setEnabled:YES];
-		[feedSheetGoogleCheckbox setTransparent:NO];
-	} else {
-		[feedSheetGoogleCheckbox setEnabled:NO];
-		[feedSheetGoogleCheckbox setTransparent:YES];
-	}
-	
 	[feedSheetController showSheet:self];
 }
 
 - (IBAction)doAddNewSubscription:(id)sender {
 	NSString *url = [feedSheetTextField stringValue];
-	BOOL shouldAddToGoogle = NO;
-	
-	if ([feedSheetGoogleCheckbox isEnabled]) {
-		NSString *addToGoogleString = nil;
-		
-		if ([feedSheetGoogleCheckbox state] == NSOnState) {
-			shouldAddToGoogle = YES;
-			addToGoogleString = @"1";
-		} else {
-			shouldAddToGoogle = NO;
-			addToGoogleString = @"0";
-		}
-		
-		[SyndicationAppDelegate miscellaneousSetValue:addToGoogleString forKey:MISCELLANEOUS_ADD_TO_GOOGLE_KEY];
-	}
 	
 	if (url != nil && [url length] > 0) {
-		[self addSubscriptionForUrlString:url addToGoogle:shouldAddToGoogle];
+		[self addSubscriptionForUrlString:url];
 	}
 
 	[feedSheetController hideSheet:nil];
@@ -705,9 +663,7 @@
 }
 
 - (IBAction)refresh:(id)sender {
-	[delegate queueNonGoogleSyncRequest];
-	[delegate queueGoogleSyncRequest];
-	[delegate queueGoogleStarredSyncRequest];
+	[delegate queueAllFeedsSyncRequest];
 }
 
 - (IBAction)view:(id)sender {
@@ -854,7 +810,7 @@
 	}
 }
 
-- (void)addSubscriptionForUrlString:(NSString *)url addToGoogle:(BOOL)addToGoogle {
+- (void)addSubscriptionForUrlString:(NSString *)url {
 	url = [url clTrimmedString];
 	
 	// add http:// to the beginning if necessary
@@ -877,13 +833,7 @@
 		return;
 	}
 	
-	FMResultSet *rs;
-	
-	if (addToGoogle) {
-		rs = [db executeQuery:@"SELECT * FROM feed WHERE GoogleUrl=? AND IsHidden=0", [NSString stringWithFormat:@"feed/%@", url]];
-	} else {
-		rs = [db executeQuery:@"SELECT * FROM feed WHERE Url=? AND IsHidden=0", url];
-	}
+	FMResultSet *rs = [db executeQuery:@"SELECT * FROM feed WHERE Url=? AND IsHidden=0", url];
 	
 	if ([rs next]) {
 		[CLErrorHelper createAndDisplayError:@"The subscription could not be added because it already exists in your library!"];
@@ -895,11 +845,7 @@
 	[rs close];
 	[db close];
 	
-	if (addToGoogle) {
-		url = [NSString stringWithFormat:@"feed/%@", url];
-	}
-	
-	[delegate addSubscriptionForUrlString:url withTitle:nil toFolder:nil isFromGoogle:addToGoogle propagateChangesToGoogle:YES refreshImmediately:YES];
+	[delegate addSubscriptionForUrlString:url withTitle:nil toFolder:nil refreshImmediately:YES];
 }
 
 - (BOOL)selectSourceListItem:(CLSourceListItem *)item {
@@ -1102,11 +1048,11 @@
 	CLSourceListItem *clickedItem = [sourceList itemAtRow:clickedRow];
 	
 	if (clickedItem == sourceListNewItems) {
-		[delegate queueNonGoogleSyncRequest];
+		[delegate queueAllFeedsSyncRequest];
 	} else if (clickedItem == sourceListStarredItems) {
-		[delegate queueGoogleStarredSyncRequest];
+		
 	} else {
-		[delegate refreshSourceListItem:clickedItem onlyGoogle:NO];
+		[delegate refreshSourceListItem:clickedItem];
 	}
 }
 
@@ -1157,63 +1103,11 @@
 	if (returnCode == NSAlertFirstButtonReturn) {
 		
 		CLSourceListItem *clickedItem = [(CLSourceListItem *)contextInfo retain];
-		NSInteger numberFromGoogle = [self numberFromGoogleForItemOrDescendents:clickedItem];
 		
-		if (numberFromGoogle == 0) {
-			[delegate deleteSourceListItem:clickedItem propagateChangesToGoogle:NO];
-		} else {
-			[(NSPanel *)[theAlert window] close];
-			
-			NSAlert *alert = [[NSAlert alloc] init];
-			[alert addButtonWithTitle:@"OK"];
-			[alert addButtonWithTitle:@"Cancel"];
-			
-			if ([clickedItem isKindOfClass:[CLSourceListFeed class]]) {
-				[alert setMessageText:@"Would you also like do delete this subscription from Google Reader?"];
-			} else if ([clickedItem isKindOfClass:[CLSourceListFolder class]]) {
-				[alert setMessageText:@"The folder you are deleting contains subscriptions from Google Reader. Would you also like to delete those subscriptions from Google Reader?"];
-			} else { // should never happen
-				[alert setMessageText:@"The item you are deleting contains subscriptions from Google Reader. Would you also like to delete those subscriptions from Google Reader?"];
-			}
-			
-			[alert setAlertStyle:NSWarningAlertStyle];
-			[alert beginSheetModalForWindow:[self window] modalDelegate:self didEndSelector:@selector(sourceListGoogleDeleteAlertDidEnd:returnCode:contextInfo:) contextInfo:clickedItem];
-			[alert release];
-		}
+		[delegate deleteSourceListItem:clickedItem];
 		
 		[clickedItem release];
 	}
-}
-
-- (void)sourceListGoogleDeleteAlertDidEnd:(NSAlert *)theAlert returnCode:(NSInteger)returnCode contextInfo:(void *)contextInfo {
-	
-	CLSourceListItem *clickedItem = [(CLSourceListItem *)contextInfo retain];
-	
-	if (returnCode == NSAlertFirstButtonReturn) {
-		[delegate deleteSourceListItem:clickedItem propagateChangesToGoogle:YES];
-	} else {
-		[delegate deleteSourceListItem:clickedItem propagateChangesToGoogle:NO];
-	}
-	
-	[clickedItem release];
-}
-
-- (NSInteger)numberFromGoogleForItemOrDescendents:(CLSourceListItem *)item {
-	NSInteger total = 0;
-	
-	if ([item isKindOfClass:[CLSourceListFeed class]]) {
-		CLSourceListFeed *feed = (CLSourceListFeed *)item;
-		
-		if ([feed isFromGoogle]) {
-			total += 1;
-		}
-	} else {
-		for (CLSourceListItem *child in [item children]) {
-			total += [self numberFromGoogleForItemOrDescendents:child];
-		}
-	}
-	
-	return total;
 }
 
 
@@ -1245,7 +1139,7 @@
 	
 	[self performSelector:@selector(updateFirstResponder) withObject:nil afterDelay:0.1];
 	
-	[delegate sourceListDidRenameItem:item propagateChangesToGoogle:YES];
+	[delegate sourceListDidRenameItem:item];
 }
 
 - (BOOL)outlineView:(NSOutlineView *)outlineView writeItems:(NSArray *)items toPasteboard:(NSPasteboard *)pboard {
@@ -1314,7 +1208,7 @@
 			folder = (CLSourceListFolder *)dropTarget;
 		}
 		
-		[delegate moveItem:sourceListDragItem toFolder:folder propagateChangesToGoogle:YES];
+		[delegate moveItem:sourceListDragItem toFolder:folder];
 		
 		return YES;
 	}
@@ -2052,7 +1946,7 @@
 		
 		if (item != nil) {
 			if ([item isRead] == NO) {
-				[delegate markPostWithDbIdAsRead:[item postDbId] propagateChangesToGoogle:YES];
+				[delegate markPostWithDbIdAsRead:[item postDbId]];
 			}
 		}
 	}
@@ -3130,7 +3024,7 @@
 			}
 			
 			if ([currentSelection isRead] == NO) {
-				[delegate markPostWithDbIdAsRead:[currentSelection dbId] propagateChangesToGoogle:YES];
+				[delegate markPostWithDbIdAsRead:[currentSelection dbId]];
 			}
 			
 		} else {

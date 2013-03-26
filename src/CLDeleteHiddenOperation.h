@@ -9,11 +9,9 @@
 #import "CLOperation.h"
 
 @interface CLDeleteHiddenOperation : CLOperation {
-	NSArray *nonGoogleFeeds;
-	NSArray *googleFeeds;
+	NSArray *feeds;
 }
 
-@property (retain, nonatomic) NSArray *nonGoogleFeeds;
-@property (retain, nonatomic) NSArray *googleFeeds;
+@property (retain, nonatomic) NSArray *feeds;
 
 @end

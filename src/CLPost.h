@@ -42,9 +42,7 @@
 @property (assign, nonatomic) BOOL isStarred;
 @property (retain, nonatomic) NSMutableArray *enclosures;
 
-- (id)initWithJSON:(NSDictionary *)json;
 - (id)initWithResultSet:(FMResultSet *)rs; // note, this doesn't load enclosures
-- (void)populateUsingJSON:(NSDictionary *)json;
 - (void)populateUsingResultSet:(FMResultSet *)rs; // note, this doesn't load enclosures
 
 - (NSComparisonResult)publishedDateCompare:(CLPost *)otherPost;

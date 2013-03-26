@@ -6,7 +6,7 @@
 //  Copyright 2011 Calvin Lough. All rights reserved.
 //
 
-typedef enum {CLRequestNonGoogleSync, CLRequestGoogleSync, CLRequestGoogleStarredSync, CLRequestSpecificFeedsSync, CLRequestGoogleSingleFeedSync, CLRequestDeleteHidden} CLRequestType;
+typedef enum {CLRequestAllFeedsSync, CLRequestSpecificFeedsSync, CLRequestDeleteHidden} CLRequestType;
 
 @class CLSourceListFeed;
 

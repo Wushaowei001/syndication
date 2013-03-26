@@ -57,14 +57,6 @@
 	} else if ([self isKindOfClass:[CLSourceListFeed class]]) {
 		if ([(CLSourceListFeed *)self url] != nil && [[(CLSourceListFeed *)self url] length] > 0) {
 			builtTitle = [(CLSourceListFeed *)self url];
-		} else {
-			if ([(CLSourceListFeed *)self googleUrl] != nil && [[(CLSourceListFeed *)self googleUrl] length] > 0) {
-				builtTitle = [(CLSourceListFeed *)self googleUrl];
-				
-				if ([builtTitle hasPrefix:@"feed/"]) {
-					builtTitle = [builtTitle substringFromIndex:5];
-				}
-			}
 		}
 	}
 	

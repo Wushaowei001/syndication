@@ -10,7 +10,7 @@
 
 }
 
-+ (NSData *)fetchUrlString:(NSString *)urlString postData:(NSData *)postData usingAuth:(NSString *)auth returnNilOnFailure:(BOOL)nilOnFail urlResponse:(NSURLResponse **)urlResponse;
++ (NSData *)fetchUrlString:(NSString *)urlString postData:(NSData *)postData returnNilOnFailure:(BOOL)nilOnFail urlResponse:(NSURLResponse **)urlResponse;
 + (NSURLConnection *)fetchUrlString:(NSString *)urlString delegate:(id)delegate;
 + (BOOL)isSuccessStatusCode:(NSInteger)code;
 

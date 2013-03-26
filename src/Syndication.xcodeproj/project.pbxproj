@@ -46,18 +46,6 @@
 		3E37D85615A10E7100F1B831 /* CLFeedParserOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 3E37D84D15A10E7100F1B831 /* CLFeedParserOperation.m */; };
 		3E37D85715A10E7100F1B831 /* CLIconRefreshOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 3E37D85015A10E7100F1B831 /* CLIconRefreshOperation.m */; };
 		3E37D85815A10E7100F1B831 /* CLOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 3E37D85315A10E7100F1B831 /* CLOperation.m */; };
-		3E37D87515A10E8600F1B831 /* CLGoogleAddFeedOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 3E37D85A15A10E8600F1B831 /* CLGoogleAddFeedOperation.m */; };
-		3E37D87615A10E8600F1B831 /* CLGoogleAddStarOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 3E37D85C15A10E8600F1B831 /* CLGoogleAddStarOperation.m */; };
-		3E37D87715A10E8600F1B831 /* CLGoogleAddToFolderOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 3E37D85E15A10E8600F1B831 /* CLGoogleAddToFolderOperation.m */; };
-		3E37D87815A10E8600F1B831 /* CLGoogleDeleteFeedOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 3E37D86015A10E8600F1B831 /* CLGoogleDeleteFeedOperation.m */; };
-		3E37D87915A10E8600F1B831 /* CLGoogleFeedOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 3E37D86215A10E8600F1B831 /* CLGoogleFeedOperation.m */; };
-		3E37D87A15A10E8600F1B831 /* CLGoogleFeedTitleOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 3E37D86515A10E8600F1B831 /* CLGoogleFeedTitleOperation.m */; };
-		3E37D87B15A10E8600F1B831 /* CLGoogleMarkReadOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 3E37D86715A10E8600F1B831 /* CLGoogleMarkReadOperation.m */; };
-		3E37D87C15A10E8600F1B831 /* CLGoogleOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 3E37D86915A10E8600F1B831 /* CLGoogleOperation.m */; };
-		3E37D87D15A10E8600F1B831 /* CLGoogleRemoveFromFolderOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 3E37D86C15A10E8600F1B831 /* CLGoogleRemoveFromFolderOperation.m */; };
-		3E37D87E15A10E8600F1B831 /* CLGoogleRemoveStarOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 3E37D86E15A10E8600F1B831 /* CLGoogleRemoveStarOperation.m */; };
-		3E37D87F15A10E8600F1B831 /* CLGoogleStarredOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 3E37D87015A10E8600F1B831 /* CLGoogleStarredOperation.m */; };
-		3E37D88015A10E8600F1B831 /* CLGoogleSyncOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 3E37D87315A10E8600F1B831 /* CLGoogleSyncOperation.m */; };
 		3E37D89515A10EB700F1B831 /* CLDatabaseHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 3E37D88215A10EB700F1B831 /* CLDatabaseHelper.m */; };
 		3E37D89615A10EB700F1B831 /* CLDateHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 3E37D88415A10EB700F1B831 /* CLDateHelper.m */; };
 		3E37D89715A10EB700F1B831 /* CLErrorHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 3E37D88615A10EB700F1B831 /* CLErrorHelper.m */; };
@@ -200,34 +188,6 @@
 		3E37D85215A10E7100F1B831 /* CLOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CLOperation.h; sourceTree = "<group>"; };
 		3E37D85315A10E7100F1B831 /* CLOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CLOperation.m; sourceTree = "<group>"; };
 		3E37D85415A10E7100F1B831 /* CLOperationDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CLOperationDelegate.h; sourceTree = "<group>"; };
-		3E37D85915A10E8600F1B831 /* CLGoogleAddFeedOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CLGoogleAddFeedOperation.h; sourceTree = "<group>"; };
-		3E37D85A15A10E8600F1B831 /* CLGoogleAddFeedOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CLGoogleAddFeedOperation.m; sourceTree = "<group>"; };
-		3E37D85B15A10E8600F1B831 /* CLGoogleAddStarOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CLGoogleAddStarOperation.h; sourceTree = "<group>"; };
-		3E37D85C15A10E8600F1B831 /* CLGoogleAddStarOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CLGoogleAddStarOperation.m; sourceTree = "<group>"; };
-		3E37D85D15A10E8600F1B831 /* CLGoogleAddToFolderOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CLGoogleAddToFolderOperation.h; sourceTree = "<group>"; };
-		3E37D85E15A10E8600F1B831 /* CLGoogleAddToFolderOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CLGoogleAddToFolderOperation.m; sourceTree = "<group>"; };
-		3E37D85F15A10E8600F1B831 /* CLGoogleDeleteFeedOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CLGoogleDeleteFeedOperation.h; sourceTree = "<group>"; };
-		3E37D86015A10E8600F1B831 /* CLGoogleDeleteFeedOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CLGoogleDeleteFeedOperation.m; sourceTree = "<group>"; };
-		3E37D86115A10E8600F1B831 /* CLGoogleFeedOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CLGoogleFeedOperation.h; sourceTree = "<group>"; };
-		3E37D86215A10E8600F1B831 /* CLGoogleFeedOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CLGoogleFeedOperation.m; sourceTree = "<group>"; };
-		3E37D86315A10E8600F1B831 /* CLGoogleFeedOperationDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CLGoogleFeedOperationDelegate.h; sourceTree = "<group>"; };
-		3E37D86415A10E8600F1B831 /* CLGoogleFeedTitleOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CLGoogleFeedTitleOperation.h; sourceTree = "<group>"; };
-		3E37D86515A10E8600F1B831 /* CLGoogleFeedTitleOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CLGoogleFeedTitleOperation.m; sourceTree = "<group>"; };
-		3E37D86615A10E8600F1B831 /* CLGoogleMarkReadOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CLGoogleMarkReadOperation.h; sourceTree = "<group>"; };
-		3E37D86715A10E8600F1B831 /* CLGoogleMarkReadOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CLGoogleMarkReadOperation.m; sourceTree = "<group>"; };
-		3E37D86815A10E8600F1B831 /* CLGoogleOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CLGoogleOperation.h; sourceTree = "<group>"; };
-		3E37D86915A10E8600F1B831 /* CLGoogleOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = CLGoogleOperation.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
-		3E37D86A15A10E8600F1B831 /* CLGoogleOperationDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CLGoogleOperationDelegate.h; sourceTree = "<group>"; };
-		3E37D86B15A10E8600F1B831 /* CLGoogleRemoveFromFolderOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CLGoogleRemoveFromFolderOperation.h; sourceTree = "<group>"; };
-		3E37D86C15A10E8600F1B831 /* CLGoogleRemoveFromFolderOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CLGoogleRemoveFromFolderOperation.m; sourceTree = "<group>"; };
-		3E37D86D15A10E8600F1B831 /* CLGoogleRemoveStarOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CLGoogleRemoveStarOperation.h; sourceTree = "<group>"; };
-		3E37D86E15A10E8600F1B831 /* CLGoogleRemoveStarOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CLGoogleRemoveStarOperation.m; sourceTree = "<group>"; };
-		3E37D86F15A10E8600F1B831 /* CLGoogleStarredOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CLGoogleStarredOperation.h; sourceTree = "<group>"; };
-		3E37D87015A10E8600F1B831 /* CLGoogleStarredOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CLGoogleStarredOperation.m; sourceTree = "<group>"; };
-		3E37D87115A10E8600F1B831 /* CLGoogleStarredOperationDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CLGoogleStarredOperationDelegate.h; sourceTree = "<group>"; };
-		3E37D87215A10E8600F1B831 /* CLGoogleSyncOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CLGoogleSyncOperation.h; sourceTree = "<group>"; };
-		3E37D87315A10E8600F1B831 /* CLGoogleSyncOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CLGoogleSyncOperation.m; sourceTree = "<group>"; };
-		3E37D87415A10E8600F1B831 /* CLGoogleSyncOperationDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CLGoogleSyncOperationDelegate.h; sourceTree = "<group>"; };
 		3E37D88115A10EB700F1B831 /* CLDatabaseHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CLDatabaseHelper.h; sourceTree = "<group>"; };
 		3E37D88215A10EB700F1B831 /* CLDatabaseHelper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = CLDatabaseHelper.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
 		3E37D88315A10EB700F1B831 /* CLDateHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CLDateHelper.h; sourceTree = "<group>"; };
@@ -608,41 +568,6 @@
 			name = Xibs;
 			sourceTree = "<group>";
 		};
-		3EB042ED136F44A700582C4C /* Google Operations */ = {
-			isa = PBXGroup;
-			children = (
-				3E37D85915A10E8600F1B831 /* CLGoogleAddFeedOperation.h */,
-				3E37D85A15A10E8600F1B831 /* CLGoogleAddFeedOperation.m */,
-				3E37D85B15A10E8600F1B831 /* CLGoogleAddStarOperation.h */,
-				3E37D85C15A10E8600F1B831 /* CLGoogleAddStarOperation.m */,
-				3E37D85D15A10E8600F1B831 /* CLGoogleAddToFolderOperation.h */,
-				3E37D85E15A10E8600F1B831 /* CLGoogleAddToFolderOperation.m */,
-				3E37D85F15A10E8600F1B831 /* CLGoogleDeleteFeedOperation.h */,
-				3E37D86015A10E8600F1B831 /* CLGoogleDeleteFeedOperation.m */,
-				3E37D86115A10E8600F1B831 /* CLGoogleFeedOperation.h */,
-				3E37D86215A10E8600F1B831 /* CLGoogleFeedOperation.m */,
-				3E37D86315A10E8600F1B831 /* CLGoogleFeedOperationDelegate.h */,
-				3E37D86415A10E8600F1B831 /* CLGoogleFeedTitleOperation.h */,
-				3E37D86515A10E8600F1B831 /* CLGoogleFeedTitleOperation.m */,
-				3E37D86615A10E8600F1B831 /* CLGoogleMarkReadOperation.h */,
-				3E37D86715A10E8600F1B831 /* CLGoogleMarkReadOperation.m */,
-				3E37D86815A10E8600F1B831 /* CLGoogleOperation.h */,
-				3E37D86915A10E8600F1B831 /* CLGoogleOperation.m */,
-				3E37D86A15A10E8600F1B831 /* CLGoogleOperationDelegate.h */,
-				3E37D86B15A10E8600F1B831 /* CLGoogleRemoveFromFolderOperation.h */,
-				3E37D86C15A10E8600F1B831 /* CLGoogleRemoveFromFolderOperation.m */,
-				3E37D86D15A10E8600F1B831 /* CLGoogleRemoveStarOperation.h */,
-				3E37D86E15A10E8600F1B831 /* CLGoogleRemoveStarOperation.m */,
-				3E37D86F15A10E8600F1B831 /* CLGoogleStarredOperation.h */,
-				3E37D87015A10E8600F1B831 /* CLGoogleStarredOperation.m */,
-				3E37D87115A10E8600F1B831 /* CLGoogleStarredOperationDelegate.h */,
-				3E37D87215A10E8600F1B831 /* CLGoogleSyncOperation.h */,
-				3E37D87315A10E8600F1B831 /* CLGoogleSyncOperation.m */,
-				3E37D87415A10E8600F1B831 /* CLGoogleSyncOperationDelegate.h */,
-			);
-			name = "Google Operations";
-			sourceTree = "<group>";
-		};
 		3EB042F0136F44E100582C4C /* XML Parsing */ = {
 			isa = PBXGroup;
 			children = (
@@ -708,7 +633,6 @@
 				3E37D85215A10E7100F1B831 /* CLOperation.h */,
 				3E37D85315A10E7100F1B831 /* CLOperation.m */,
 				3E37D85415A10E7100F1B831 /* CLOperationDelegate.h */,
-				3EB042ED136F44A700582C4C /* Google Operations */,
 			);
 			name = Operations;
 			sourceTree = "<group>";
@@ -896,18 +820,6 @@
 				3E37D85615A10E7100F1B831 /* CLFeedParserOperation.m in Sources */,
 				3E37D85715A10E7100F1B831 /* CLIconRefreshOperation.m in Sources */,
 				3E37D85815A10E7100F1B831 /* CLOperation.m in Sources */,
-				3E37D87515A10E8600F1B831 /* CLGoogleAddFeedOperation.m in Sources */,
-				3E37D87615A10E8600F1B831 /* CLGoogleAddStarOperation.m in Sources */,
-				3E37D87715A10E8600F1B831 /* CLGoogleAddToFolderOperation.m in Sources */,
-				3E37D87815A10E8600F1B831 /* CLGoogleDeleteFeedOperation.m in Sources */,
-				3E37D87915A10E8600F1B831 /* CLGoogleFeedOperation.m in Sources */,
-				3E37D87A15A10E8600F1B831 /* CLGoogleFeedTitleOperation.m in Sources */,
-				3E37D87B15A10E8600F1B831 /* CLGoogleMarkReadOperation.m in Sources */,
-				3E37D87C15A10E8600F1B831 /* CLGoogleOperation.m in Sources */,
-				3E37D87D15A10E8600F1B831 /* CLGoogleRemoveFromFolderOperation.m in Sources */,
-				3E37D87E15A10E8600F1B831 /* CLGoogleRemoveStarOperation.m in Sources */,
-				3E37D87F15A10E8600F1B831 /* CLGoogleStarredOperation.m in Sources */,
-				3E37D88015A10E8600F1B831 /* CLGoogleSyncOperation.m in Sources */,
 				3E37D89515A10EB700F1B831 /* CLDatabaseHelper.m in Sources */,
 				3E37D89615A10EB700F1B831 /* CLDateHelper.m in Sources */,
 				3E37D89715A10EB700F1B831 /* CLErrorHelper.m in Sources */,

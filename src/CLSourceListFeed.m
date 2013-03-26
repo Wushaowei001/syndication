@@ -14,12 +14,9 @@
 @synthesize dbId;
 @synthesize url;
 @synthesize enclosingFolderReference;
-@synthesize isFromGoogle;
-@synthesize googleUrl;
 @synthesize websiteLink;
 @synthesize postsToAddToDB;
 @synthesize lastSyncPosts;
-@synthesize googleUnreadGuids;
 
 - (id)init {
 	self = [super init];
@@ -42,17 +39,6 @@
 	return self;
 }
 
-- (void)dealloc {
-	[url release];
-	[googleUrl release];
-	[websiteLink release];
-	[postsToAddToDB release];
-	[lastSyncPosts release];
-	[googleUnreadGuids release];
-	
-	[super dealloc];
-}
-
 - (void)populateUsingResultSet:(FMResultSet *)rs {
 	[self setDbId:[rs longForColumn:@"Id"]];
 	[self setUrl:[rs stringForColumn:@"Url"]];
@@ -66,8 +52,6 @@
 	
 	[self setBadgeValue:[rs longForColumn:@"UnreadCount"]];
 	[self setIconLastRefreshed:[rs dateForColumn:@"IconLastRefreshed"]];
-	[self setIsFromGoogle:[rs boolForColumn:@"IsFromGoogle"]];
-	[self setGoogleUrl:[rs stringForColumn:@"GoogleUrl"]];
 	[self setWebsiteLink:[rs stringForColumn:@"WebsiteLink"]];
 	
 	NSData *lastSyncPostsData = [rs dataForColumn:@"LastSyncPosts"];
@@ -75,12 +59,15 @@
 	if (lastSyncPostsData != nil) {
 		[self setLastSyncPosts:[NSUnarchiver unarchiveObjectWithData:lastSyncPostsData]];
 	}
+}
+
+- (void)dealloc {
+	[url release];
+	[websiteLink release];
+	[postsToAddToDB release];
+	[lastSyncPosts release];
 	
-	NSData *googleUnreadGuidsData = [rs dataForColumn:@"GoogleUnreadGuids"];
-	
-	if (googleUnreadGuidsData != nil) {
-		[self setGoogleUnreadGuids:[NSUnarchiver unarchiveObjectWithData:googleUnreadGuidsData]];
-	}
+	[super dealloc];
 }
 
 @end

@@ -18,16 +18,14 @@
 
 static NSInteger modulo;
 
-@synthesize nonGoogleFeeds;
-@synthesize googleFeeds;
+@synthesize feeds;
 
 + (void)initialize {
 	modulo = ((NSInteger)[[NSDate date] timeIntervalSince1970] % 10);
 }
 
 - (void)dealloc {
-	[nonGoogleFeeds release];
-	[googleFeeds release];
+	[feeds release];
 	
 	[super dealloc];
 }
@@ -50,20 +48,11 @@ static NSInteger modulo;
 		
 		NSInteger i = 0;
 		
-		for (CLSourceListFeed *feed in googleFeeds) {
-			if ((i % 10) == modulo) {
-				[db executeUpdate:@"DELETE FROM enclosure WHERE PostId IN (SELECT Id FROM post WHERE FeedId=? AND IsHidden=1)", [NSNumber numberWithInteger:[feed dbId]]];
-				[db executeUpdate:@"DELETE FROM post WHERE FeedId=? AND IsHidden=1", [NSNumber numberWithInteger:[feed dbId]]];
-			}
-			
-			i++;
-		}
-		
 		// just to be safe, we only delete hidden posts older than 6 months
 		NSTimeInterval timestamp = [[NSDate date] timeIntervalSince1970];
 		NSInteger olderThan = timestamp - (TIME_INTERVAL_MONTH * 6);
 		
-		for (CLSourceListFeed *feed in nonGoogleFeeds) {
+		for (CLSourceListFeed *feed in feeds) {
 			if ((i % 10) == modulo) {
 				if ([feed lastSyncPosts] == nil || [[feed lastSyncPosts] count] == 0) {
 					continue;
