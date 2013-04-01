@@ -3337,38 +3337,6 @@ static NSArray *preferencesToolbarItems;
 		return NO;
 	}
 	
-	if ([anItem action] == @selector(email:) || [anItem action] == @selector(facebook:) || [anItem action] == @selector(twitter:) || [anItem action] == @selector(instapaper:)) {
-		
-		if ([self isContentWindow:window] == NO) {
-			return NO;
-		}
-		
-		if (selectedTab != nil) {
-			NSString *linkString = nil;
-			
-			if ([selectedTab tabType] == CLTimelineType) {
-				CLTimelineView *timelineView = [selectedTab timelineView];
-				
-				if ([timelineView selectedItem] != nil) {
-					linkString = [[timelineView selectedItem] postUrl];
-				}
-				
-			} else if ([selectedTab tabType] == CLClassicType) {
-				CLClassicView *classicView = [selectedTab classicView];
-				
-				if ([[classicView tableView] selectedRow] >= 0) {
-					linkString = [[[classicView posts] objectAtIndex:[[classicView tableView] selectedRow]] link];
-				}
-			}
-			
-			if (linkString != nil && [linkString length] > 0) {
-				return YES;
-			}
-		}
-		
-		return NO;
-	}
-	
 	if ([anItem action] == @selector(selectNextTab:) || [anItem action] == @selector(selectPreviousTab:)) {
 		if ([self isContentWindow:window] == NO) {
 			return NO;

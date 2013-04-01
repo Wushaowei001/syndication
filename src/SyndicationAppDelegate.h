@@ -176,7 +176,6 @@
 - (IBAction)selectNextTab:(id)sender;
 - (IBAction)selectPreviousTab:(id)sender;
 - (IBAction)acknowledgments:(id)sender;
-- (IBAction)emailSupport:(id)sender;
 - (void)openSubscription:(NSMenuItem *)sender;
 - (void)openNewItems:(NSMenuItem *)sender;
 - (void)openStarredItems:(NSMenuItem *)sender;
