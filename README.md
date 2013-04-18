@@ -12,7 +12,6 @@ Syndication is an RSS reader for Mac OS X with a focus on usability.
 * customizable fonts
 * organize your feeds into folders using drag-and-drop
 * full text search
-* syncs with Google Reader
 
 ## Requirements
 
