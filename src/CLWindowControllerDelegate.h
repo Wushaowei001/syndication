@@ -25,6 +25,7 @@
 - (void)openNewWindowForSubscription:(CLSourceListItem *)subscription;
 - (void)openNewWindowForUrlRequest:(NSURLRequest *)request;
 - (void)changeNewItemsBadgeValueBy:(NSInteger)value;
+- (void)clearNewItemsBadgeValue;
 - (void)refreshTabsForAncestorsOf:(CLSourceListItem *)item;
 - (void)refreshTabsFor:(CLSourceListItem *)item;
 - (void)restoreSourceListSelections;

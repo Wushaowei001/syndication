@@ -114,6 +114,7 @@
 
 - (BOOL)tableExists:(NSString *)tableName inDb:(FMDatabase *)db;
 - (void)runDatabaseUpdateOnBackgroundThread:(NSString *)queryString, ... NS_REQUIRES_NIL_TERMINATION;
+- (void)runDatabaseUpdatesOnBackgroundThread:(NSArray *)queries;
 - (void)loadFromDatabase;
 - (void)recursivelyLoadChildrenOf:(CLSourceListFolder *)folder usingDatabaseHandle:(FMDatabase *)db;
 - (void)updateFeedSyncStatus;

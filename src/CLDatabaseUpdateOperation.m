@@ -12,12 +12,10 @@
 
 @implementation CLDatabaseUpdateOperation
 
-@synthesize queryString;
-@synthesize parameters;
+@synthesize queries;
 
 - (void)dealloc {
-	[queryString release];
-	[parameters release];
+	[queries release];
 	
 	[super dealloc];
 }
@@ -34,7 +32,20 @@
 			[NSException raise:@"Database error" format:@"Failed to connect to the database!"];
 		}
 		
-		[db executeUpdate:queryString withArgumentsInArray:parameters];
+		[db beginTransaction];
+		
+		for (NSArray *query in queries) {
+			NSString *queryString = [query objectAtIndex:0];
+			NSArray *parameters = nil;
+			
+			if ([query count] > 1) {
+				parameters = [query subarrayWithRange:NSMakeRange(1, [query count] - 1)];
+			}
+			
+			[db executeUpdate:queryString withArgumentsInArray:parameters];
+		}
+		
+		[db commit];
 		
 		[db close];
 		

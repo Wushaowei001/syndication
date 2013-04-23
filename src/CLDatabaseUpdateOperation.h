@@ -9,11 +9,9 @@
 #import "CLOperation.h"
 
 @interface CLDatabaseUpdateOperation : CLOperation {
-	NSString *queryString;
-	NSArray *parameters;
+	NSArray *queries;
 }
 
-@property (copy, nonatomic) NSString *queryString;
-@property (copy, nonatomic) NSArray *parameters;
+@property (copy, nonatomic) NSArray *queries;
 
 @end

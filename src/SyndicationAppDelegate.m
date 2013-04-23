@@ -434,22 +434,26 @@ static NSArray *preferencesToolbarItems;
 }
 
 - (void)runDatabaseUpdateOnBackgroundThread:(NSString *)queryString, ... {
-	NSMutableArray *parameters = [NSMutableArray array];
-	
+	NSMutableArray *query = [NSMutableArray array];
+	[query addObject:queryString];
+
 	va_list args;
 	va_start(args, queryString);
-	
+
 	for (id arg = va_arg(args, id); arg != nil; arg = va_arg(args, id)) {
-		[parameters addObject:arg];
+		[query addObject:arg];
 	}
-	
+
 	va_end(args);
-	
+
+	[self runDatabaseUpdatesOnBackgroundThread:[NSArray arrayWithObject:query]];
+}
+
+- (void)runDatabaseUpdatesOnBackgroundThread:(NSArray *)queries {
 	CLDatabaseUpdateOperation *dbOp = [[CLDatabaseUpdateOperation alloc] init];
-	[dbOp setQueryString:queryString];
-	[dbOp setParameters:parameters];
+	[dbOp setQueries:queries];
 	[dbOp setDelegate:self];
-	
+
 	[operationQueue addOperation:dbOp];
 	[dbOp release];
 }
@@ -1376,15 +1380,20 @@ static NSArray *preferencesToolbarItems;
 	FMResultSet *rs = [db executeQuery:@"SELECT * FROM post WHERE Id=?", [NSNumber numberWithInteger:dbId]];
 	
 	NSInteger feedId = 0;
-	NSString *guid = nil;
 	
 	if ([rs next]) {
 		feedId = [rs longForColumn:@"FeedId"];
-		guid = [rs stringForColumn:@"Guid"];
 	}
 	
 	[rs close];
 	[db close];
+	
+    NSArray *queries = [NSArray arrayWithObjects:
+                        [NSArray arrayWithObjects:@"UPDATE post SET IsRead=1 WHERE Id=?", [NSNumber numberWithInteger:dbId], nil],
+                        [NSArray arrayWithObjects:UNREAD_COUNT_QUERY, [NSNumber numberWithInteger:feedId], [NSNumber numberWithInteger:feedId], nil],
+                        nil];
+    
+	[self runDatabaseUpdatesOnBackgroundThread:queries];
 	
 	CLSourceListFeed *feed = [self feedForDbId:feedId];
 	
@@ -1395,9 +1404,6 @@ static NSArray *preferencesToolbarItems;
 	[self sourceListDidChange];
 	
 	[self markViewItemsAsReadForPostDbId:dbId];
-	
-	[self runDatabaseUpdateOnBackgroundThread:@"UPDATE post SET IsRead=1 WHERE Id=?", [NSNumber numberWithInteger:dbId], nil];
-	[self runDatabaseUpdateOnBackgroundThread:UNREAD_COUNT_QUERY, [NSNumber numberWithInteger:feedId], [NSNumber numberWithInteger:feedId], nil];
 }
 
 - (void)markViewItemsAsReadForPostDbId:(NSInteger)postDbId {
@@ -1789,6 +1795,18 @@ static NSArray *preferencesToolbarItems;
 	if (totalUnread < 0) {
 		[self setTotalUnread:0];
 	}
+	
+	[self updateDockTile];
+}
+
+- (void)clearNewItemsBadgeValue {
+	
+	for (CLWindowController *windowController in windowControllers) {
+		CLSourceListItem *newItems = [windowController sourceListNewItems];
+		[newItems setBadgeValue:0];
+	}
+	
+	[self setTotalUnread:0];
 	
 	[self updateDockTile];
 }
@@ -2188,77 +2206,75 @@ static NSArray *preferencesToolbarItems;
 	[rs close];
 	[db close];
 	
-	if ([posts count] > 0) {
+	for (NSDictionary *post in posts) {
+		[self markViewItemsAsReadForPostDbId:[[post objectForKey:@"Id"] integerValue]];
+	}
+	
+	BOOL doManualUpdate = NO;
+	
+	if (newItems) {
+		[self runDatabaseUpdateOnBackgroundThread:@"UPDATE post SET IsRead=1", nil];
+		[self runDatabaseUpdateOnBackgroundThread:@"UPDATE feed SET UnreadCount=0", nil];
+	} else if (starredItems) {
+		[self runDatabaseUpdateOnBackgroundThread:@"UPDATE post SET IsRead=1 WHERE IsStarred=1", nil];
+		doManualUpdate = YES;
+	} else if (item != nil && [item isKindOfClass:[CLSourceListFeed class]]) {
+		NSNumber *dbIdNum = [NSNumber numberWithInteger:[(CLSourceListFeed *)item dbId]];
+		[self runDatabaseUpdateOnBackgroundThread:@"UPDATE post SET IsRead=1 WHERE FeedId=? AND IsRead=0", dbIdNum, nil];
+		[self runDatabaseUpdateOnBackgroundThread:@"UPDATE feed SET UnreadCount=0 WHERE Id=?", dbIdNum, nil];
+	} else if (item != nil && [item isKindOfClass:[CLSourceListFolder class]]) {
+		[self runDatabaseUpdateOnBackgroundThread:[NSString stringWithFormat:@"UPDATE post SET IsRead=1 WHERE Id IN (SELECT post.Id FROM post, feed, folder WHERE post.FeedId=feed.Id AND feed.FolderId=folder.Id AND folder.Path LIKE '%@%%') AND IsRead=0", [(CLSourceListFolder *)item path]], nil];
+		doManualUpdate = YES;
+	} else if (timestamp != nil) {
+		[self runDatabaseUpdateOnBackgroundThread:@"UPDATE post SET IsRead=1 WHERE IsRead=0 AND Received < ?", timestamp, nil];
+		doManualUpdate = YES;
+	}
+	
+	if (doManualUpdate) {
+		NSMutableSet *feedsToUpdateUnreadCount = [NSMutableSet set];
+		
 		for (NSDictionary *post in posts) {
-			[self markViewItemsAsReadForPostDbId:[[post objectForKey:@"Id"] integerValue]];
-		}
-		
-		BOOL doManualUpdate = NO;
-		
-		if (newItems) {
-			[self runDatabaseUpdateOnBackgroundThread:@"UPDATE post SET IsRead=1", nil];
-			[self runDatabaseUpdateOnBackgroundThread:@"UPDATE feed SET UnreadCount=0", nil];
-		} else if (starredItems) {
-			[self runDatabaseUpdateOnBackgroundThread:@"UPDATE post SET IsRead=1 WHERE IsStarred=1", nil];
-			doManualUpdate = YES;
-		} else if (item != nil && [item isKindOfClass:[CLSourceListFeed class]]) {
-			NSNumber *dbIdNum = [NSNumber numberWithInteger:[(CLSourceListFeed *)item dbId]];
-			[self runDatabaseUpdateOnBackgroundThread:@"UPDATE post SET IsRead=1 WHERE FeedId=? AND IsRead=0", dbIdNum, nil];
-			[self runDatabaseUpdateOnBackgroundThread:@"UPDATE feed SET UnreadCount=0 WHERE Id=?", dbIdNum, nil];
-		} else if (item != nil && [item isKindOfClass:[CLSourceListFolder class]]) {
-			[self runDatabaseUpdateOnBackgroundThread:[NSString stringWithFormat:@"UPDATE post SET IsRead=1 WHERE Id IN (SELECT post.Id FROM post, feed, folder WHERE post.FeedId=feed.Id AND feed.FolderId=folder.Id AND folder.Path LIKE '%@%%') AND IsRead=0", [(CLSourceListFolder *)item path]], nil];
-			doManualUpdate = YES;
-		} else if (timestamp != nil) {
-			[self runDatabaseUpdateOnBackgroundThread:@"UPDATE post SET IsRead=1 WHERE IsRead=0 AND Received < ?", timestamp, nil];
-			doManualUpdate = YES;
-		}
-		
-		if (doManualUpdate) {
-			NSMutableSet *feedsToUpdateUnreadCount = [NSMutableSet set];
+			NSNumber *feedId = [post objectForKey:@"FeedId"];
 			
-			for (NSDictionary *post in posts) {
-				NSNumber *feedId = [post objectForKey:@"FeedId"];
-				
-				if (feedId != nil && [feedId integerValue] > 0) {
-					CLSourceListFeed *feed = [self feedForDbId:[feedId integerValue]];
-					
-					if (feed != nil) {
-						[feedsToUpdateUnreadCount addObject:feed];
-					}
-				}
-			}
-			
-			for (CLSourceListFeed *feed in feedsToUpdateUnreadCount) {
-				NSNumber *feedId = [NSNumber numberWithInteger:[feed dbId]];
-				[self runDatabaseUpdateOnBackgroundThread:UNREAD_COUNT_QUERY, feedId, feedId, nil];
-			}
-		}
-		
-		if (newItems) {
-			[self changeNewItemsBadgeValueBy:(totalUnread * -1)];
-			
-			for (CLSourceListItem *subscription in subscriptionList) {
-				[SyndicationAppDelegate clearBadgeValuesForItemAndDescendents:subscription];
-			}
-		} else if (item != nil) {
-			[SyndicationAppDelegate changeBadgeValuesBy:([item badgeValue] * -1) forAncestorsOfItem:item];
-			[self changeNewItemsBadgeValueBy:([item badgeValue] * -1)];
-			[SyndicationAppDelegate clearBadgeValuesForItemAndDescendents:item];
-		} else {
-			for (NSDictionary *post in posts) {
-				CLSourceListFeed *feed = [self feedForDbId:[[post objectForKey:@"FeedId"] integerValue]];
+			if (feedId != nil && [feedId integerValue] > 0) {
+				CLSourceListFeed *feed = [self feedForDbId:[feedId integerValue]];
 				
 				if (feed != nil) {
-					[SyndicationAppDelegate changeBadgeValueBy:-1 forItem:feed];
-					[SyndicationAppDelegate changeBadgeValuesBy:-1 forAncestorsOfItem:feed];
+					[feedsToUpdateUnreadCount addObject:feed];
 				}
-				
-				[self changeNewItemsBadgeValueBy:-1];
 			}
 		}
 		
-		[self sourceListDidChange];
+		for (CLSourceListFeed *feed in feedsToUpdateUnreadCount) {
+			NSNumber *feedId = [NSNumber numberWithInteger:[feed dbId]];
+			[self runDatabaseUpdateOnBackgroundThread:UNREAD_COUNT_QUERY, feedId, feedId, nil];
+		}
 	}
+	
+	if (newItems) {
+		[self clearNewItemsBadgeValue];
+		
+		for (CLSourceListItem *subscription in subscriptionList) {
+			[SyndicationAppDelegate clearBadgeValuesForItemAndDescendents:subscription];
+		}
+	} else if (item != nil) {
+		[SyndicationAppDelegate changeBadgeValuesBy:([item badgeValue] * -1) forAncestorsOfItem:item];
+		[self changeNewItemsBadgeValueBy:([item badgeValue] * -1)];
+		[SyndicationAppDelegate clearBadgeValuesForItemAndDescendents:item];
+	} else {
+		for (NSDictionary *post in posts) {
+			CLSourceListFeed *feed = [self feedForDbId:[[post objectForKey:@"FeedId"] integerValue]];
+			
+			if (feed != nil) {
+				[SyndicationAppDelegate changeBadgeValueBy:-1 forItem:feed];
+				[SyndicationAppDelegate changeBadgeValuesBy:-1 forAncestorsOfItem:feed];
+			}
+			
+			[self changeNewItemsBadgeValueBy:-1];
+		}
+	}
+	
+	[self sourceListDidChange];
 }
 
 - (void)refreshSourceListItem:(CLSourceListItem *)item {
