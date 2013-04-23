@@ -3,7 +3,9 @@ Syndication
 
 Syndication is an RSS reader for Mac OS X with a focus on usability.
 
-![Syndication](https://raw.github.com/calvinlough/syndication/gh-pages/images/screenshot.jpg)
+![Screenshot 1](https://raw.github.com/calvinlough/syndication/gh-pages/images/screenshot2.jpg)
+![Screenshot 2](https://raw.github.com/calvinlough/syndication/gh-pages/images/screenshot3.jpg)
+![Screenshot 3](https://raw.github.com/calvinlough/syndication/gh-pages/images/screenshot4.jpg)
 
 ## Features
 
@@ -12,7 +14,6 @@ Syndication is an RSS reader for Mac OS X with a focus on usability.
 * customizable fonts
 * organize your feeds into folders using drag-and-drop
 * full text search
-* syncs with Google Reader
 
 ## Requirements
 
