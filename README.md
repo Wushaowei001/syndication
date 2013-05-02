@@ -15,13 +15,14 @@ Syndication is an RSS reader for Mac OS X with a focus on usability.
 * organize your feeds into folders using drag-and-drop
 * full text search
 
-## Requirements
+## Download
 
-Mac OS 10.7+
+* [Download Syndication v1.1.1](https://github.com/calvinlough/syndication/raw/gh-pages/downloads/Syndication%201.1.1.zip)
+* Requires Mac OS 10.7+
 
 ## License
 
-Copyright &copy; 2012 Calvin Lough
+Copyright &copy; 2013 Calvin Lough
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
