@@ -35,7 +35,7 @@
 	[imageThumb lockFocus];
 	[[NSGraphicsContext currentContext] setImageInterpolation:NSImageInterpolationHigh];
 	[self setSize:size];
-	[self compositeToPoint:NSZeroPoint operation:NSCompositeCopy];
+	[self drawAtPoint:NSZeroPoint fromRect:NSZeroRect operation:NSCompositeCopy fraction:1.0];
 	[imageThumb unlockFocus];
 	
 	[self setScalesWhenResized:originalScalesValue];
