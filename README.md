@@ -9,11 +9,11 @@ Syndication is an RSS reader for Mac OS X with a focus on usability.
 
 ## Features
 
+* Tabs
 * RSS/Atom support
 * OPML import/export
-* customizable fonts
-* organize your feeds into folders using drag-and-drop
-* full text search
+* Organize your feeds into folders using drag-and-drop
+* Full text search
 
 ## Download
 
